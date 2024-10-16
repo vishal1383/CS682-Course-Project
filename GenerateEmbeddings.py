@@ -5,13 +5,28 @@ from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
 from TextPreprocessor import TextPreprocessor
 
-ROOT_EMBEDDINGS_FOLDER = './Embeddings'
+ROOT_EMBEDDINGS_FOLDER = './Embeddings/'
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (np.ndarray, torch.Tensor)):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
+    
+class NumpyDecoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        super().__init__(object_hook=self.object_hook, *args, **kwargs)
+
+    def object_hook(self, obj):
+        if '__ndarray__' in obj:
+            return np.array(obj['__ndarray__'])
+        return obj
+    
+    def get_embeddings(embeddings_path):
+        with open(embeddings_path, 'r') as file:
+            json_data = file.read()
+        embeddings = json.loads(json_data, cls=NumpyDecoder)
+        return embeddings
 
 class GenerateEmbeddings:
     def __init__(self, data_path, root_embeddings_path = ROOT_EMBEDDINGS_FOLDER):
@@ -33,6 +48,7 @@ class GenerateEmbeddings:
 
     # Generate embedding for the image data
     def generate_image_embedding(self, img):
+        # print(img)
         inputs = self.processor(images = Image.open(img), return_tensors = "np")
         outputs = self.model(**inputs)
         return outputs['image_embeds']
@@ -52,6 +68,12 @@ class GenerateEmbeddings:
         json_data = json.dumps(embeddings, cls = NumpyEncoder)
         with open(embeddings_path, 'w') as file:
             file.write(json_data)
+    
+    def load_embeddings(embeddings_path):
+        with open(embeddings_path, 'r') as file:
+            json_data = file.read()
+        embeddings = json.loads(json_data, cls=NumpyDecoder)
+        return embeddings
 
 if __name__ == '__main__':
     generateEmbeddings = GenerateEmbeddings(data_path ='./destination')
@@ -68,4 +90,6 @@ if __name__ == '__main__':
     # Calculate the image-text similarity score
     logits_per_image = outputs[2]
     probs = logits_per_image.softmax(dim = 1)
+    generateEmbeddings.save_embeddings(outputs[0], ROOT_EMBEDDINGS_FOLDER + 'sample')
     print(probs)
+    
