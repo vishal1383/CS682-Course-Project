@@ -4,29 +4,10 @@ import torch
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
 from TextPreprocessor import TextPreprocessor
-
+import NumpyUtils
 ROOT_EMBEDDINGS_FOLDER = './Embeddings/'
 
-class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, (np.ndarray, torch.Tensor)):
-            return obj.tolist()
-        return json.JSONEncoder.default(self, obj)
-    
-class NumpyDecoder(json.JSONDecoder):
-    def __init__(self, *args, **kwargs):
-        super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
-    def object_hook(self, obj):
-        if '__ndarray__' in obj:
-            return np.array(obj['__ndarray__'])
-        return obj
-    
-    def get_embeddings(embeddings_path):
-        with open(embeddings_path, 'r') as file:
-            json_data = file.read()
-        embeddings = json.loads(json_data, cls=NumpyDecoder)
-        return embeddings
 
 class GenerateEmbeddings:
     def __init__(self, data_path, root_embeddings_path = ROOT_EMBEDDINGS_FOLDER):
@@ -65,14 +46,14 @@ class GenerateEmbeddings:
 
     # Save generated embeddings dictionary to a json file
     def save_embeddings(self, embeddings, embeddings_path):
-        json_data = json.dumps(embeddings, cls = NumpyEncoder)
+        json_data = json.dumps(embeddings, cls = NumpyUtils.NumpyEncoder)
         with open(embeddings_path, 'w') as file:
             file.write(json_data)
     
     def load_embeddings(embeddings_path):
         with open(embeddings_path, 'r') as file:
             json_data = file.read()
-        embeddings = json.loads(json_data, cls=NumpyDecoder)
+        embeddings = json.loads(json_data, cls=NumpyUtils.NumpyDecoder)
         return embeddings
 
 if __name__ == '__main__':

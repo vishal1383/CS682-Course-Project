@@ -24,7 +24,7 @@ class Datasets:
         self.prefix = self.dataset_paths[dataset_type]
         self.embbeding_util = g
         self.n_examples = n_examples    
-        # self.embedding_prefix = ROOT_EMBEDDINGS_FOLDER + self.prefix
+        self.embedding_prefix = ROOT_EMBEDDINGS_FOLDER + self.prefix
     def load_dataset(self,):
         if self.type == 'deep-fashion':
             image_data = pd.read_csv(self.prefix + 'images.csv')
@@ -44,17 +44,18 @@ class Datasets:
                     cnt+=1
             self.texts = text_data
 
+            # Save the resulting embeddings
+            embeddings_dir = ROOT_EMBEDDINGS_FOLDER
+
             # Generate embeddings for the tensors
             for i in range(len(self.images)):
                 embs = self.embbeding_util.generate_embeddings([self.texts[i]], [Image.open(self.images[i])])
-                self.image_tensors.append(embs[1])
-                self.text_tensors.append(embs[0])
-            
+                # self.image_tensors.append(embs[1])
+                # self.text_tensors.append(embs[0])
 
-            # Save the resulting embeddings
-            embeddings_dir = ROOT_EMBEDDINGS_FOLDER
-            generateEmbeddings.save_embeddings(self.image_tensors, self.embedding_prefix + 'images')
-            generateEmbeddings.save_embeddings(self.text_tensors, self.embedding_prefix + 'texts')
+                generateEmbeddings.save_embeddings([embs[1]], self.embedding_prefix + 'images'+str(i))
+                generateEmbeddings.save_embeddings([embs[0]], self.embedding_prefix + 'texts'+str(i))
+                print(f"Done {i}")
             # for i in range(len(self.image_tensors)):
         else:
             raise ValueError(f"Dataset {self.type} not supported")
@@ -65,5 +66,5 @@ class Datasets:
     #     return self.embedding_prefix
 if __name__ == '__main__':
     generateEmbeddings = GenerateEmbeddings(data_path ='./destination')
-    d = Datasets(generateEmbeddings, 10,'deep-fashion')
+    d = Datasets(generateEmbeddings, 10000,'deep-fashion')
     d.load_dataset()
