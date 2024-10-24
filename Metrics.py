@@ -1,11 +1,10 @@
-# import Datasets
 import NumpyUtils
 import numpy as np
 import os
 from GenerateEmbeddings import ROOT_EMBEDDINGS_FOLDER
 
 class Metrics():
-    def __init__(self, metrics_path: str, num_examples=10, batch_size=1, top_k=10, load_sim=True): # Defining it in the outset is the easiest way to do that
+    def __init__(self, metrics_path: str, num_examples = 10, batch_size = 1, top_k = 10, load_sim = True): # Defining it in the outset is the easiest way to do that
         self.bs = 1
         self.top_k = top_k
         self.num_examples = num_examples
@@ -45,11 +44,19 @@ class Metrics():
         sim = np.load(os.path.join(self.metrics_path, 'similarity-matrix.npy'))
         cnt=sum([(i+1 in sim[i]) for i in range(sim.shape[0])])/sim.shape[0]
         return cnt
-        
-        
-        
+    
+    def get_misclassifications(self):
+        indices = np.arange(0, self.similarity_matrix.shape[0])
+        results = np.any(self.similarity_matrix == indices[:, None], axis = 1)
+        misclassified_examples = np.where(results == False)[0]
+
+        for i in range(0, misclassified_examples.shape[0]):
+            print('Recommended examples for query ' + str( misclassified_examples[i]) + ' : ')
+            for recommended_indices in self.similarity_matrix[i]:
+                 print(recommended_indices)
 
 if __name__ == '__main__':
     # metrics = Metrics('fashion-dataset',  num_examples=5000, load_sim=False)
-    metrics = Metrics('dataset',  num_examples=15, load_sim=True)
+    metrics = Metrics('dataset',  num_examples = 15, load_sim = True)
     # print(metrics.compute_recall())
+    print(metrics.get_misclassifications())

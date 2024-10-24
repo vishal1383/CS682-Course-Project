@@ -1,5 +1,4 @@
 import json
-import numpy as np
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
 from TextPreprocessor import TextPreprocessor

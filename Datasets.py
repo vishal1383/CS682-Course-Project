@@ -1,9 +1,8 @@
+import os
 import pandas as pd
 import GenerateEmbeddings
 from GenerateEmbeddings import *
 from NumpyUtils import *
-
-
 
 class Datasets:
     def __init__(self, g: GenerateEmbeddings, n_examples, dataset_type):
@@ -14,15 +13,17 @@ class Datasets:
         self.text_tensors = []
         self.type = dataset_type
         self.dataset_paths = {
-            'deep-fashion': './fashion-dataset/'
+            'deep-fashion': './fashion-dataset/',
+            'test-deep-fashion': 'dataset'
         }
         self.prefix = self.dataset_paths[dataset_type]
         self.embbeding_util = g
         self.n_examples = n_examples
         self.embedding_prefix = os.path.join(ROOT_EMBEDDINGS_FOLDER, self.prefix)
-        os.makedirs(self.embedding_prefix, exist_ok=True)
+        os.makedirs(self.embedding_prefix, exist_ok = True)
+    
     def load_dataset(self,):
-        if self.type == 'deep-fashion':
+        if self.type == 'deep-fashion' or self.type == 'test-deep-fashion':
             image_data = pd.read_csv(os.path.join(self.prefix, 'images.csv'))
             image_filenames = [image_data.iloc[i]['filename'] for i in range(len(image_data))][:self.n_examples]
 
