@@ -6,15 +6,15 @@ from transformers import CLIPProcessor, CLIPModel
 from TextPreprocessor import TextPreprocessor
 import NumpyUtils
 ROOT_EMBEDDINGS_FOLDER = './Embeddings/'
-
+MODEL = 'openai/clip-vit-base-patch32'
 
 
 class GenerateEmbeddings:
     def __init__(self, data_path, root_embeddings_path = ROOT_EMBEDDINGS_FOLDER):
         self.data_path = data_path
         self.text_preprocessor = TextPreprocessor()
-        self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-        self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+        self.model = CLIPModel.from_pretrained(MODEL)
+        self.processor = CLIPProcessor.from_pretrained(MODEL)
 
         self.root_embeddings_path = root_embeddings_path
 
@@ -59,7 +59,7 @@ class GenerateEmbeddings:
 if __name__ == '__main__':
     generateEmbeddings = GenerateEmbeddings(data_path ='./destination')
     imgs = [Image.open('BatBall.jpeg')]
-    texts = ["Bat and Ball", "I am not the right text"]
+    texts = ['Bat and Bal', 'I am not the right text']
     outputs = generateEmbeddings.generate_embeddings(texts, images = imgs)
     
     # Note: We might have to normalize the embeddings
