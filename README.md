@@ -5,7 +5,7 @@ Fashion recommendation systems are crucial for enhancing user experience and boo
 #### Our Pipeline:
 In our project, we first retrieve images with high recall and use re-ranking with custom image features such as bounding box, sleeve length etc. along with the embeddings of original image and query to achieve better precision as shown below:
 
-![Project Pipeline](https://github.com/vishal1383/CS682-Course-Project/blob/main/pipeline_682.jpg)
+![Project Pipeline](https://github.com/vishal1383/CS682-Course-Project/blob/main/static/pipeline_682.jpg)
 # Installation Steps
 
 - Create a conda environment and activate it

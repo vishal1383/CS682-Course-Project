@@ -4,4 +4,4 @@
 # Ignore python executables
 __pycache__/
 
-*/fashion-dataset/*
+/datasets/fashion_dataset/images/*
