@@ -9,9 +9,9 @@ ROOT_DATASET_FOLDER = './datasets/'
 class Datasets:
     def __init__(self, dataset_type, num_examples):
         self.n_examples = num_examples
-        
-        self.images = [] # Expected to be a Image.open file
-        self.texts = []  # expected to be a file
+         
+        self.texts = []  # List of text queries
+        self.image_paths = [] # List of paths of the corresponding images
         
         self.type = dataset_type
         self.dataset_paths = {
@@ -34,6 +34,7 @@ class Datasets:
             images_df['id'] = images_df['filename'].apply(lambda x: x.replace('.jpg', ' ')).astype(int)
             
             text_df = pd.read_csv(os.path.join(self.dataset_prefix, 'styles.csv'), on_bad_lines = 'skip')
+            text_df['query'] = text_df.iloc[:, 1:].apply(lambda row: ' '.join(row.astype(str)), axis = 1)
 
             data_df = text_df.merge(images_df, on = 'id', how = 'left').reset_index(drop = True)
             data_df = data_df[:self.n_examples]
@@ -47,18 +48,20 @@ class Datasets:
         if self.type == 'deep_fashion' or self.type == 'test_data':
             data_df = pd.read_csv(os.path.join(self.dataset_prefix, 'dataset.csv'))
             
+            # Ids in the dataset corresponding to image-text pair
+            ids = data_df['id'].tolist()
+            
             image_filenames = [data_df.iloc[i]['filename'] for i in range(len(data_df))]
-            self.images = [os.path.join(self.dataset_prefix, 'images', image_name) for image_name in image_filenames]
+            self.image_paths = [os.path.join(self.dataset_prefix, 'images', image_name) for image_name in image_filenames]
 
-            data_df['text_data'] = data_df.iloc[:, 1:].apply(lambda row: ' '.join(row.astype(str)), axis = 1)
-            self.texts = data_df['text_data'].to_list()
+            self.texts = data_df['query'].to_list()
 
-            # Generate embeddings for the tensors
-            for i in range(len(self.images)):
-                embs = self.embbeding_util.generate_embeddings([self.texts[i]], [Image.open(self.images[i])])
-                self.embbeding_util.save_embeddings([embs[1]], os.path.join('images' + str(i)))
-                self.embbeding_util.save_embeddings([embs[0]], os.path.join('texts' + str(i)))
-                print(f"Done {i}")
+            # Generate and save embeddings for text-image pairs
+            for i in range(len(self.texts)):
+                embs = self.embbeding_util.generate_embeddings([self.texts[i]], [Image.open(self.image_paths[i])])
+                self.embbeding_util.save_embeddings(embs['text_embs'], os.path.join('texts_' + str(ids[i])))
+                self.embbeding_util.save_embeddings(embs['image_embeds'], os.path.join('images_' + str(ids[i])))
+                print(f"Done {ids[i]}")
         else:
             raise ValueError(f"Dataset {self.type} not supported")
 

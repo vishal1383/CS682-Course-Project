@@ -24,21 +24,26 @@ class GenerateEmbeddings:
         
         inputs = self.processor(preprocessed_texts, images, return_tensors = "pt", truncation = True)
         outputs = self.model(**inputs)
-        return [outputs['text_embeds'], outputs['image_embeds'], outputs.logits_per_image, outputs.logits_per_text]
+        return {
+            'text_embs': outputs['text_embeds'],
+            'image_embeds': outputs['image_embeds'],
+            'logits_per_text': outputs['logits_per_text'],
+            'logits_per_image': outputs['logits_per_image']
+        }
 
-    # Generate embedding for the image data
-    def generate_image_embedding(self, img):
-        inputs = self.processor(images = Image.open(img), return_tensors = "np")
+    # Generate embedding for the image(s)
+    def generate_image_embedding(self, images):
+        inputs = self.processor(images, return_tensors = "np")
         outputs = self.model(**inputs)
         return outputs['image_embeds']
 
-    # Generate embedding for the text data
-    def generate_text_embedding(self, text):
+    # Generate embedding for the text(s)
+    def generate_text_embedding(self, texts):
         preprocessed_texts = []
         for text in texts:
             preprocessed_texts.append(self.text_preprocessor.preprocess_text(text))
         
-        inputs = self.processor(text = preprocessed_texts, images = None, return_tensors = "np")
+        inputs = self.processor(text = preprocessed_texts, return_tensors = "np")
         outputs = self.model(**inputs)
         return outputs['text_embeds']
 
