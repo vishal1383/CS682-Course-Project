@@ -32,7 +32,7 @@ class Metrics():
         self.embeddings_path = os.path.join(ROOT_EMBEDDINGS_FOLDER, self.dataset_paths[dataset_type])
         self.similarity_matrix = np.zeros((num_examples, top_k))
 
-        self.similarity_matrix_path = os.path.join(self.metrics_path, 'similarity-matrix.npy')
+        self.similarity_matrix_path = os.path.join(self.metrics_path, 'similarity-matrix_' + str(self.top_k) + '.npy')
         if compute_sim:
             self.compute_similarity()
         else:
@@ -72,7 +72,7 @@ class Metrics():
         # for every text query
         sim = np.load(self.similarity_matrix_path).astype(int)
         cnt = sum([(i in sim[i]) for i in range(sim.shape[0])])/sim.shape[0]
-        print(f'Recall@{self.top_k} for {self.num_examples} examples is: ', cnt)
+        print(f'\nRecall@{self.top_k} for {self.num_examples} examples is: ', cnt)
         print('\n' + '-' * 50)
         return cnt
     
@@ -96,45 +96,58 @@ class Metrics():
 
         image_filenames = [self.data_df.iloc[i]['filename'] for i in range(self.num_examples)]
         self.image_paths = [os.path.join(self.dataset_prefix, 'images', image_name) for image_name in image_filenames]
-
-        print('|', '-' * 10, 'Getting the incorrect recommendations...')
-        examples = np.random.choice(incorrect_examples, size = num_examples, replace = False)
-        for i in examples:
-            text = texts[i] + f'({self.indices_to_ids[i]})'
-            
-            recommended_images = {'ids': [], 'imgs': []}
-            for index in self.similarity_matrix[i]:
-                recommended_images['ids'].append(self.indices_to_ids[int(index)])
-                recommended_images['imgs'].append(Image.open(self.image_paths[int(index)]))
-
-            ground_truth_images = {'ids': [self.indices_to_ids[i]], 'imgs': [Image.open(self.image_paths[i])]}
-            self.plotUtils.plot_recommendations(text, recommended_images, [False] * self.top_k + [True], ground_truth_images)
         
-        print('|', '-' * 10, 'Getting the correct recommendations..')
-        examples = np.random.choice(correct_examples, size = num_examples, replace = False)
-        for i in examples:
-            text = texts[i] + f'({self.indices_to_ids[i]})'
-            
-            recommended_images = {'ids': [], 'imgs': []}
-            labels = np.where(self.similarity_matrix[i] != i, False, True)
-            for index in self.similarity_matrix[i]:
-                recommended_images['ids'].append(self.indices_to_ids[int(index)])
-                recommended_images['imgs'].append(Image.open(self.image_paths[int(index)]))
+        if len(incorrect_examples) == 0:
+            print('|', '-' * 10, 'No incorrect recommendations found..!')
+        else:
+            print('|', '-' * 10, 'Getting the incorrect recommendations...')
+            # If we don't have num_examples incorrect examples, return whatever we have
+            examples = np.random.choice(incorrect_examples, size = min(len(incorrect_examples), num_examples), replace = False)
+            # examples = incorrect_examples[:num_examples]
+            for i in examples:
+                text = texts[i] + f'({self.indices_to_ids[i]})'
+                
+                recommended_images = {'ids': [], 'imgs': []}
+                for index in self.similarity_matrix[i]:
+                    recommended_images['ids'].append(self.indices_to_ids[int(index)])
+                    recommended_images['imgs'].append(Image.open(self.image_paths[int(index)]))
 
-            self.plotUtils.plot_recommendations(text, recommended_images, labels)
+                ground_truth_images = {'ids': [self.indices_to_ids[i]], 'imgs': [Image.open(self.image_paths[i])]}
+                self.plotUtils.plot_recommendations(text, recommended_images, [False] * self.top_k, ground_truth_images)
+        
+        if len(correct_examples) == 0:
+            print('|', '-' * 10, 'No correct recommendations found..!')
+        else:
+            print('|', '-' * 10, 'Getting the correct recommendations..')
+            examples = np.random.choice(correct_examples, size = min(len(correct_examples), num_examples), replace = False)
+            # examples = correct_examples[:num_examples]
+            for i in examples:
+                text = texts[i] + f'({self.indices_to_ids[i]})'
+                
+                recommended_images = {'ids': [], 'imgs': []}
+                labels = np.where(self.similarity_matrix[i] != i, False, True)
+                for index in self.similarity_matrix[i]:
+                    recommended_images['ids'].append(self.indices_to_ids[int(index)])
+                    recommended_images['imgs'].append(Image.open(self.image_paths[int(index)]))
 
-        print('|', '-' * 10, 'Getting the recommendations with recall 1..')
-        examples = np.random.choice(examples_with_recall_1, size = num_examples, replace = False)
-        for i in examples:
-            text = texts[i] + f'({self.indices_to_ids[i]})'
-            
-            recommended_images = {'ids': [], 'imgs': []}
-            labels = np.where(self.similarity_matrix[i] != i, False, True)
-            for index in self.similarity_matrix[i]:
-                recommended_images['ids'].append(self.indices_to_ids[int(index)])
-                recommended_images['imgs'].append(Image.open(self.image_paths[int(index)]))
+                self.plotUtils.plot_recommendations(text, recommended_images, labels)
 
-            self.plotUtils.plot_recommendations(text, recommended_images, labels)
+        if len(examples_with_recall_1) == 0:
+            print('|', '-' * 10, 'No recommendations with recall 1 found..!')
+        else:
+            print('|', '-' * 10, 'Getting the recommendations with recall 1..')
+            examples = np.random.choice(examples_with_recall_1, size = min(len(examples_with_recall_1), num_examples), replace = False)
+            # examples = examples_with_recall_1[:num_examples]
+            for i in examples:
+                text = texts[i] + f'({self.indices_to_ids[i]})'
+                
+                recommended_images = {'ids': [], 'imgs': []}
+                labels = np.where(self.similarity_matrix[i] != i, False, True)
+                for index in self.similarity_matrix[i]:
+                    recommended_images['ids'].append(self.indices_to_ids[int(index)])
+                    recommended_images['imgs'].append(Image.open(self.image_paths[int(index)]))
+
+                self.plotUtils.plot_recommendations(text, recommended_images, labels)
         
         print('\n' + '-' * 50)
         return
@@ -147,4 +160,5 @@ class Metrics():
 '''
     TODOs:
     1. Similarity matrix doesn't contain sim values - just has the indices -> could be changed
+    2. Correct examples plot can have images without any +ve pairs - happens because we are only showing top_k and if the ground_truth might not be in top_k
 '''
