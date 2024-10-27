@@ -35,11 +35,11 @@ class Datasets:
             images_df['id'] = images_df['filename'].apply(lambda x: x.replace('.jpg', ' ')).astype(int)
             
             text_df = pd.read_csv(os.path.join(self.dataset_prefix, 'styles.csv'), on_bad_lines = 'skip')
-            text_df['query'] = text_df.iloc[:, 1:].apply(lambda row: ' '.join(row.astype(str)), axis = 1)
+            text_df['query'] = text_df.apply(lambda row: ' '.join(row[['season', 'usage', 'productDisplayName']].astype(str)), axis = 1)
 
             data_df = text_df.merge(images_df, on = 'id', how = 'left').reset_index(drop = True)
             data_df = data_df[:self.n_examples]
-            data_df.to_csv(os.path.join(self.dataset_prefix, 'dataset.csv'))
+            data_df.to_csv(os.path.join(self.dataset_prefix, 'dataset.csv'), index = False)
         else:
             raise ValueError(f"Dataset {self.type} not supported")
 
