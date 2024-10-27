@@ -8,13 +8,14 @@ class PlotUtils:
         pass
 
     # Function to plot incorrect recommendations
-    def plot_recommendations(self, text, recommended_images, labels, ground_truth_image = None, top_k = 10):
+    def plot_recommendations(self, text, recommended_images, labels, ground_truth_images = {'ids': [], 'imgs': []}, top_k = 10):
         if top_k == None:
             top_k = len(recommended_images)
 
-        len_ = top_k if ground_truth_image == None else top_k + 1
-        
-        images = recommended_images + [ground_truth_image]
+        len_ = top_k if ground_truth_images == {'ids': [], 'imgs': []} else top_k + 1
+
+        images = recommended_images['imgs'] + ground_truth_images['imgs']
+        ids = recommended_images['ids'] + ground_truth_images['ids']
 
         _, ax = plt.subplots(1, len_, figsize = (3 * (len_), 6))
         plt.suptitle(text, fontsize=16)
@@ -26,7 +27,7 @@ class PlotUtils:
             if i == top_k:
                 ax[i].set_title("Actual Image")
             else:
-                ax[i].set_title(f"Rec. {i + 1}")
+                ax[i].set_title(f"Rec. {i + 1} ({ids[i]})")
             
             # Set border color based on label (correct/incorrect)
             border_color = 'green' if labels[i] else 'red'

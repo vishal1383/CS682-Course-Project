@@ -16,4 +16,5 @@ In our project, we first retrieve images with high recall and use re-ranking wit
 - conda install anaconda::pillow
 - conda install pytorch::pytorch
 - conda install conda-forge::transformers
+- conda install scikit-learn
 ```

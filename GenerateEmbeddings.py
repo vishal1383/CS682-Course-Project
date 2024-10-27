@@ -7,6 +7,7 @@ import NumpyUtils
 
 ROOT_EMBEDDINGS_FOLDER = './embeddings/'
 MODEL = 'openai/clip-vit-base-patch32'
+EMBEDDING_DIM = 512
 
 class GenerateEmbeddings:
     def __init__(self, root_embeddings_path = ROOT_EMBEDDINGS_FOLDER):

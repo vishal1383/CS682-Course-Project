@@ -29,6 +29,7 @@ class Datasets:
     # Merges images and text csv to a single file
     # Creates a single csv named dataset.csv
     def clean_dataset(self):
+        print('\nCleaning the raw data and creating "dataset.csv"...')
         if self.type == 'deep_fashion' or self.type == 'test_data':
             images_df = pd.read_csv(os.path.join(self.dataset_prefix, 'images.csv'))
             images_df['id'] = images_df['filename'].apply(lambda x: x.replace('.jpg', ' ')).astype(int)
@@ -41,10 +42,13 @@ class Datasets:
             data_df.to_csv(os.path.join(self.dataset_prefix, 'dataset.csv'))
         else:
             raise ValueError(f"Dataset {self.type} not supported")
-        
+
+        print('Done!') 
+        print('\n' + '-' * 50)
         return
     
     def load_dataset(self):
+        print(f'\nLoading {self.type} dataset and saving the embeddings for the text-image pairs')
         if self.type == 'deep_fashion' or self.type == 'test_data':
             data_df = pd.read_csv(os.path.join(self.dataset_prefix, 'dataset.csv'))
             
@@ -61,9 +65,14 @@ class Datasets:
                 embs = self.embbeding_util.generate_embeddings([self.texts[i]], [Image.open(self.image_paths[i])])
                 self.embbeding_util.save_embeddings(embs['text_embs'], os.path.join('texts_' + str(ids[i])))
                 self.embbeding_util.save_embeddings(embs['image_embeds'], os.path.join('images_' + str(ids[i])))
-                print(f"Done {ids[i]}")
+
+                if i == len(self.texts) - 1 or (i >= 100 and i % 100 == 0):
+                    print('|', '-' * 10, 'Done processing ' + str(i + 1) + ' text-image pairs')
         else:
             raise ValueError(f"Dataset {self.type} not supported")
+        
+        print('\n' + '-' * 50)
+        return
 
 # if __name__ == '__main__':
 #     d = Datasets('deep_fashion', 100)
