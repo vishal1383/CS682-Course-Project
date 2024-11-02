@@ -7,6 +7,30 @@ class PlotUtils:
     def __init__(self) -> None:
         pass
 
+    def plot_metric(self, metric_values, k_values):
+        plt.figure(figsize = (5, 4))
+        bar_width = 0.4
+        x_positions = np.arange(len(k_values))
+
+        plt.bar(x_positions, metric_values, color='blue', width=bar_width)
+
+        # Set the x-ticks to be the k values
+        plt.xticks(x_positions, k_values)
+
+        # Add labels and title
+        plt.xlabel('k')
+        plt.ylabel('Recall')
+        plt.title('Recall@k Values')
+
+        # Display the recall values on top of the bars
+        for i, v in enumerate(metric_values):
+            plt.text(i, v + 0.02, f"{v:.2f}", ha='center', va='bottom')
+
+        # Show the plot
+        plt.ylim(0, 1)  # Set the y-axis limit
+        plt.show()
+        return
+
     # Function to plot recommendations
     def plot_recommendations(self, text, recommended_images, labels, ground_truth_images = {'ids': [], 'imgs': []}, top_k = 10):
         len_ = top_k if ground_truth_images == {'ids': [], 'imgs': []} else top_k + 1
