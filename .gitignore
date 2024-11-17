@@ -3,5 +3,8 @@
 
 # Ignore python executables
 __pycache__/
+*.egg-info/
+*.egg
+*.pyc
 
 /datasets/fashion_dataset/images/*
