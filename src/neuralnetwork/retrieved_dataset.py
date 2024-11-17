@@ -1,11 +1,10 @@
 import torch
 from torch.utils.data import Dataset
 import os
-import json
 import warnings
-from NumpyUtils import NumpyUtils
+from utils import numpy_utils
 
-class CustomDataset(Dataset):
+class RetrievedDataset(Dataset):
     def __init__(self, path, embeddings_dir_path, transform = None, target_transform = None):
         self.path = path
         self.embeddings_dir_path = embeddings_dir_path
@@ -14,7 +13,7 @@ class CustomDataset(Dataset):
         self.target_transform = target_transform
 
         # read embeddings
-        self.nd = NumpyUtils.NumpyDecoder()
+        self.nd = numpy_utils.NumpyDecoder()
 
         # creating list of (embedding, label) pairs
         self.samples = []
@@ -37,7 +36,7 @@ class CustomDataset(Dataset):
             # Implementation details:
             # - Assigning binary scores (could try custom scores) - i.e GT item gets 1 and rest 0
             query_id = query.split('.')[0]
-            with open(query, 'r') as f:
+            with open(os.path.join(path, query), 'r') as f:
                 for img_id in f:
                     if img_id == query_id:
                         self.samples.append([query_id, img_id.strip().split('.')[0], 1.0])
@@ -77,3 +76,6 @@ class CustomDataset(Dataset):
             'emb': emb,
             'score': score
         }
+    
+# if __name__ == 'main':
+# retrieved_dataset = RetrievedDataset('../retrieved_items', 'embeddings/test_dataset')
