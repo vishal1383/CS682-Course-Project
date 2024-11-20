@@ -1,4 +1,5 @@
 from torch import nn
+import torch
 
 class MLP(nn.Module):
     def __init__(self, input_dim = 512, output_dim = 2):
@@ -8,9 +9,10 @@ class MLP(nn.Module):
         self.fc3 = nn.Linear(100, output_dim)
 
         self.relu = nn.ReLU()
+        return
 
     def forward(self, x):
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
-        x = self.relu(self.fc3(x))
+        x = self.fc3(x)
         return x

@@ -19,5 +19,5 @@ class NumpyDecoder(json.JSONDecoder):
     def get_embeddings(self, embeddings_path):
         with open(embeddings_path, 'r') as file:
             json_data = file.read()
-        embeddings = json.loads(json_data, cls=NumpyDecoder)
+        embeddings = np.array(json.loads(json_data, cls = NumpyDecoder))
         return embeddings

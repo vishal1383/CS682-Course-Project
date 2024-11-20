@@ -1,20 +1,18 @@
 import os
 import json
 from transformers import CLIPProcessor, CLIPModel
-from src.inference.text_preprocessor import TextPreprocessor
-from utils import numpy_utils
+from src.clip.text_preprocessor import TextPreprocessor
+from src.utils import numpy_utils
 
-ROOT_EMBEDDINGS_FOLDER = './embeddings/'
+ROOT_EMBEDDINGS_FOLDER = '../embeddings/'
 MODEL = 'openai/clip-vit-base-patch32'
 EMBEDDING_DIM = 512
 
 class GenerateEmbeddings:
-    def __init__(self, root_embeddings_path = ROOT_EMBEDDINGS_FOLDER):
+    def __init__(self):
         self.text_preprocessor = TextPreprocessor()
         self.model = CLIPModel.from_pretrained(MODEL)
         self.processor = CLIPProcessor.from_pretrained(MODEL)
-
-        self.root_embeddings_path = root_embeddings_path
         return
 
     def generate_embeddings(self, texts, images):
@@ -48,17 +46,17 @@ class GenerateEmbeddings:
         return outputs['text_embeds']
 
     # Save generated embeddings dictionary to a json file
-    def save_embeddings(self, embeddings, embeddings_file_name):
+    def save_embeddings(self, embeddings, embeddings_file_path):
         json_data = json.dumps(embeddings, cls = numpy_utils.NumpyEncoder)
 
-        embeddings_path = os.path.join(self.root_embeddings_path, embeddings_file_name)
-        with open(embeddings_path, 'w') as file:
+        # embeddings_path = os.path.join(self.root_embeddings_path, embeddings_file_name)
+        with open(embeddings_file_path, 'w') as file:
             file.write(json_data)
         return
     
-    def load_embeddings(self, embeddings_file_name):
-        embeddings_path = os.path.join(self.root_embeddings_path, embeddings_file_name)
-        with open(embeddings_path, 'r') as file:
+    def load_embeddings(self, embeddings_file_path):
+        # embeddings_path = os.path.join(self.root_embeddings_path, embeddings_file_name)
+        with open(embeddings_file_path, 'r') as file:
             json_data = file.read()
         
         embeddings = json.loads(json_data, cls = numpy_utils.NumpyDecoder)

@@ -1,12 +1,14 @@
-from utils import numpy_utils
 import numpy as np
-import os
-from src.inference.generate_embeddings import ROOT_EMBEDDINGS_FOLDER
-from src.inference.raw_dataset import *
-from utils.plot_utils import PlotUtils
 from sklearn.metrics.pairwise import cosine_similarity
+from PIL import Image
+import os
 
-ROOT_METRICS_FOLDER = './metrics'
+from src.clip.generate_embeddings import ROOT_EMBEDDINGS_FOLDER
+from src.clip.raw_dataset import *
+from src.utils.plot_utils import PlotUtils
+from src.utils import numpy_utils
+
+ROOT_METRICS_FOLDER = '../metrics'
 
 class Metrics():
     def __init__(self, dataset_type, num_examples = 10, top_k = 10, compute_sim = True): # Defining it in the outset is the easiest way to do that
@@ -28,8 +30,14 @@ class Metrics():
         
         self.metrics_path = os.path.join(ROOT_METRICS_FOLDER, self.dataset_paths[dataset_type])
         os.makedirs(self.metrics_path, exist_ok = True)
+
+        self.retrieved_results_path = os.path.join('../retrieved_items', self.dataset_paths[dataset_type], str(top_k))
+        os.makedirs(self.retrieved_results_path, exist_ok = True)
         
         self.embeddings_path = os.path.join(ROOT_EMBEDDINGS_FOLDER, self.dataset_paths[dataset_type])
+        self.embedding_query_prefix = os.path.join(self.embeddings_path, 'queries')
+        self.embedding_item_prefix = os.path.join(self.embeddings_path, 'items')
+        
         self.similarity_matrix = np.zeros((num_examples, top_k))
 
         self.similarity_matrix_path = os.path.join(self.metrics_path, 'similarity-matrix_' + str(self.top_k) + '.npy')
@@ -50,8 +58,8 @@ class Metrics():
         texts, images = [],[]
         for i in range(self.num_examples):
             id = self.indices_to_ids[i]
-            text_embedding_path = os.path.join(self.embeddings_path, 'texts_' + str(id))
-            image_embedding_path = os.path.join(self.embeddings_path, 'images_' + str(id))
+            text_embedding_path = os.path.join(self.embedding_query_prefix, str(id) + '.emb')
+            image_embedding_path = os.path.join(self.embedding_item_prefix, str(id) + '.emb')
 
             text, image = nd.get_embeddings(text_embedding_path)[0], nd.get_embeddings(image_embedding_path)[0]
             texts.append(text)
@@ -75,6 +83,25 @@ class Metrics():
         print(f'\nRecall@{self.top_k} for {self.num_examples} examples is: ', cnt)
         print('\n' + '-' * 50)
         return cnt
+    
+    def save_recommendations(self):
+        indices = np.arange(0, self.similarity_matrix.shape[0])
+        results = np.any(self.similarity_matrix == indices[:, None], axis = 1)
+        correct_examples = np.where(results == True)[0]
+
+        print(correct_examples)
+        recommendations = np.vectorize(self.indices_to_ids.get)(self.similarity_matrix[correct_examples])
+
+        # TODO: they wil retrieved in ascending order
+        # query_ids = np.array((self.indices_to_ids.values())[correct_examples]
+        
+        for i, row in enumerate(recommendations):
+            filename = os.path.join(self.retrieved_results_path, f"{self.indices_to_ids[correct_examples[i]]}.txt")
+            with open(filename, 'w') as f:
+                f.write("\n".join(map(str, row)))
+        
+        return
+
     
     # Generates 'num_examples' recommendations for a give text query for different scenarios:
     # 1. Incorrect recommendations

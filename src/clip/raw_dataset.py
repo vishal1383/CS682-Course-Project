@@ -1,10 +1,11 @@
 import os
 import pandas as pd
-import src.inference.generate_embeddings as generate_embeddings
-from src.inference.generate_embeddings import *
-from utils.numpy_utils import *
+import src.clip.generate_embeddings as GenerateEmbeddings
+from src.clip.generate_embeddings import *
+from src.utils.numpy_utils import *
+from PIL import Image
 
-ROOT_DATASET_FOLDER = './datasets/'
+ROOT_DATASET_FOLDER = '../datasets/'
 
 class RawDataset:
     def __init__(self, dataset_type, num_examples):
@@ -19,12 +20,31 @@ class RawDataset:
             'test_data': 'dataset'
         }
         
-        self.embedding_prefix = os.path.join(ROOT_EMBEDDINGS_FOLDER, self.dataset_paths[dataset_type])
-        os.makedirs(self.embedding_prefix, exist_ok = True)
-        self.embbeding_util = generate_embeddings(self.embedding_prefix)
-        
+        # Create folders for dataset
+        # - embeddings/{dataset}
         self.dataset_prefix = os.path.join(ROOT_DATASET_FOLDER, self.dataset_paths[dataset_type])
         os.makedirs(self.dataset_prefix, exist_ok = True)
+
+        # Create folders for embeddings
+        # - embeddings/{dataset}
+        self.embedding_prefix = os.path.join(ROOT_EMBEDDINGS_FOLDER, self.dataset_paths[dataset_type])
+        os.makedirs(self.embedding_prefix, exist_ok = True)
+        self.embbeding_util = GenerateEmbeddings()
+        
+        # - embeddings/{dataset}/items
+        self.embedding_query_prefix = os.path.join(self.embedding_prefix, 'queries')
+        os.makedirs(self.embedding_query_prefix, exist_ok = True)
+        
+        # - embeddings/{dataset}/queries
+        self.embedding_item_prefix = os.path.join(self.embedding_prefix, 'items')
+        os.makedirs(self.embedding_item_prefix, exist_ok = True)
+
+        # - embeddings/{dataset}/custom_features
+        # TODO - Remove this from here (Will be populated in metrics.py)
+        self.embedding_custom_feat_prefix = os.path.join(self.embedding_prefix, 'custom_features')
+        os.makedirs(self.embedding_custom_feat_prefix, exist_ok = True)
+
+        return
 
     # Merges images and text csv to a single file
     # Creates a single csv named dataset.csv
@@ -43,7 +63,7 @@ class RawDataset:
         else:
             raise ValueError(f"Dataset {self.type} not supported")
 
-        print('Done!') 
+        print('Done!')
         print('\n' + '-' * 50)
         return
     
@@ -63,8 +83,12 @@ class RawDataset:
             # Generate and save embeddings for text-image pairs
             for i in range(len(self.texts)):
                 embs = self.embbeding_util.generate_embeddings([self.texts[i]], [Image.open(self.image_paths[i])])
-                self.embbeding_util.save_embeddings(embs['text_embs'], os.path.join('texts_' + str(ids[i])))
-                self.embbeding_util.save_embeddings(embs['image_embeds'], os.path.join('images_' + str(ids[i])))
+                self.embbeding_util.save_embeddings(embs['text_embs'], os.path.join(self.embedding_query_prefix, str(ids[i]) + '.emb'))
+                self.embbeding_util.save_embeddings(embs['image_embeds'], os.path.join(self.embedding_item_prefix, str(ids[i]) + '.emb'))
+                
+                # TODO - Remove this from here (Will be populated in metrics.py)
+                os.makedirs(os.path.join(self.embedding_custom_feat_prefix, str(ids[i])), exist_ok = True)
+                self.embbeding_util.save_embeddings(embs['text_embs'], os.path.join(self.embedding_custom_feat_prefix, str(ids[i]), str(ids[i]) + '.emb'))
 
                 if i == len(self.texts) - 1 or (i >= 100 and i % 100 == 0):
                     print('|', '-' * 10, 'Done processing ' + str(i + 1) + ' text-image pairs')
