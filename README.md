@@ -18,3 +18,10 @@ In our project, we first retrieve images with high recall and use re-ranking wit
 - conda install conda-forge::transformers
 - conda install scikit-learn
 ```
+
+# TODOs
+
+- Run for the entire dataset
+- Complete Unity setup
+- Add instructions in Readme
+- Normalize the embeddings before use

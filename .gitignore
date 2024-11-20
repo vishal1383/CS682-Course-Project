@@ -8,3 +8,5 @@ __pycache__/
 *.pyc
 
 /datasets/fashion_dataset/images/*
+
+/test
