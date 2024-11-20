@@ -121,9 +121,9 @@ class Trainer:
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
-                torch.save(self.model.state_dict(), os.path.join(self.models_path + 'best_model_loss.pt'))
+                torch.save(self.model.state_dict(), os.path.join(self.models_path, 'best_model_loss.pt'))
             
-            if val_precision < best_val_precision:
+            if val_precision > best_val_precision:
                 best_val_precision = val_precision
                 torch.save(self.model.state_dict(), os.path.join(self.models_path, 'best_model_precision.pt'))
 

@@ -1,12 +1,15 @@
 # Ignore macOS system files
 .DS_Store
 
+# IDE specific files
+.vscode/
+
 # Ignore python executables
 __pycache__/
 *.egg-info/
 *.egg
 *.pyc
+/build
 
+# Datasets
 /datasets/fashion_dataset/images/*
-
-/test
