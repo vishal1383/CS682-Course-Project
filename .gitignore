@@ -1,6 +1,5 @@
 # Ignore macOS system files
 .DS_Store
-*/fashion-dataset/*
 
 # IDE specific files
 .vscode/
@@ -14,3 +13,4 @@ __pycache__/
 
 # Datasets
 /datasets/fashion_dataset/images/*
+*/fashion_dataset/*
