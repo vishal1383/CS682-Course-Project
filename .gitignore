@@ -13,4 +13,3 @@ __pycache__/
 
 # Datasets
 /datasets/fashion_dataset/images/*
-*/fashion_dataset/*
