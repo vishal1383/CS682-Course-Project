@@ -1,1 +1,2 @@
 CLIPcheckpoints/fine_tuned_clip_model/model.safetensors filter=lfs diff=lfs merge=lfs -text
+*.pt filter=lfs diff=lfs merge=lfs -text
