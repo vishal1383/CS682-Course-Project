@@ -89,16 +89,17 @@ class RetrievedDataset(Dataset):
     def get_item_emb(self, item_id):
         item_embedding_path = os.path.join(self.embeddings_dir_path, 'items', item_id + '.emb')
         item_emb = torch.tensor(self.nd.get_embeddings(item_embedding_path)[0], dtype = torch.float32)
-    
-        # Add custom feature embeddings for the item
-        custom_feat_emb = torch.zeros_like(item_emb)
-        custom_feat_dir_path = os.path.join(self.embeddings_dir_path, 'custom_features', item_id)
-        for custom_feat_name in os.listdir(custom_feat_dir_path):
-            custom_feat_path = os.path.join(custom_feat_dir_path, custom_feat_name)
-            custom_feat_emb += torch.tensor(self.nd.get_embeddings(custom_feat_path)[0], dtype = torch.float32)
 
-        # Adding item and custom features embeddings
-        item_emb += custom_feat_emb
+        if self.mode == 'train':
+            # Add custom feature embeddings for the item
+            custom_feat_emb = torch.zeros_like(item_emb)
+            custom_feat_dir_path = os.path.join(self.embeddings_dir_path, 'custom_features', item_id)
+            for custom_feat_name in os.listdir(custom_feat_dir_path):
+                custom_feat_path = os.path.join(custom_feat_dir_path, custom_feat_name)
+                custom_feat_emb += torch.tensor(self.nd.get_embeddings(custom_feat_path)[0], dtype = torch.float32)
+
+            # Adding item and custom features embeddings
+            item_emb += custom_feat_emb
         
         item_emb = item_emb.flatten()
         return item_emb
@@ -139,27 +140,16 @@ class RetrievedDataset(Dataset):
             for i in range(0, len(item_ids)):
                 item_id = item_ids[i]
                 item_emb = self.get_item_emb(item_id)
-                # item_embedding_path = os.path.join(self.embeddings_dir_path, 'items', item_id + '.emb')
-                # item_emb = torch.tensor(self.nd.get_embeddings(item_embedding_path)[0], dtype = torch.float32)
-            
-                # # Add custom feature embeddings for the item
-                # custom_feat_emb = torch.zeros_like(item_emb)
-                # custom_feat_dir_path = os.path.join(self.embeddings_dir_path, 'custom_features', item_id)
-                # for custom_feat_name in os.listdir(custom_feat_dir_path):
-                #     custom_feat_path = os.path.join(custom_feat_dir_path, custom_feat_name)
-                #     custom_feat_emb += torch.tensor(self.nd.get_embeddings(custom_feat_path)[0], dtype = torch.float32)
-
-                # # Adding item and custom features embeddings
-                # item_emb += custom_feat_emb
-                
-                # item_emb = item_emb.flatten()
                 
                 # TODO: Check dimensions
                 emb = torch.cat((query_emb, item_emb), dim = 0)
                 embs.append(emb)
 
+            numerical_item_list = [int(item) for item in item_ids]
             return {
-                'query_ids': query_id, # TODO: Make this int/float instead of string
+                # TODO: Make this query_id and item_id int/float instead of string
+                'query_ids': query_id, 
+                'item_ids': torch.tensor(numerical_item_list, dtype = torch.int64),
                 'embs': torch.stack(embs, dim = 0),
                 'relevance_scores': torch.tensor(relevance_scores, dtype = torch.int64)
             }

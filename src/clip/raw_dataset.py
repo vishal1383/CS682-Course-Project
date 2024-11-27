@@ -77,6 +77,7 @@ class RawDataset:
             
             image_filenames = [data_df.iloc[i]['filename'] for i in range(len(data_df))]
             self.image_paths = [os.path.join(self.dataset_prefix, 'images', image_name) for image_name in image_filenames]
+            self.custom_features_paths = [os.path.join(self.dataset_prefix, 'rcnn_cropped_images', image_name.split('.')[0], image_name) for image_name in image_filenames]
 
             self.texts = data_df['query'].to_list()
 
@@ -86,9 +87,11 @@ class RawDataset:
                 self.embbeding_util.save_embeddings(embs['text_embs'], os.path.join(self.embedding_query_prefix, str(ids[i]) + '.emb'))
                 self.embbeding_util.save_embeddings(embs['image_embeds'], os.path.join(self.embedding_item_prefix, str(ids[i]) + '.emb'))
                 
-                # TODO - Remove this from here (Will be populated in metrics.py)
+                # TODO: If image is not present in custom_feats
                 os.makedirs(os.path.join(self.embedding_custom_feat_prefix, str(ids[i])), exist_ok = True)
-                self.embbeding_util.save_embeddings(embs['text_embs'], os.path.join(self.embedding_custom_feat_prefix, str(ids[i]), str(ids[i]) + '.emb'))
+                if os.path.exists(self.custom_features_paths[i]):
+                    custom_feat_embs = self.embbeding_util.generate_image_embedding([Image.open(self.custom_features_paths[i])])
+                    self.embbeding_util.save_embeddings(custom_feat_embs, os.path.join(self.embedding_custom_feat_prefix, str(ids[i]), str(ids[i]) + '.emb'))
 
                 if i == len(self.texts) - 1 or (i >= 100 and i % 100 == 0):
                     print('|', '-' * 10, 'Done processing ' + str(i + 1) + ' text-image pairs')

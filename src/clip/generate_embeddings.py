@@ -31,9 +31,9 @@ class GenerateEmbeddings:
 
     # Generate embedding for the image(s)
     def generate_image_embedding(self, images):
-        inputs = self.processor(images, return_tensors = "np")
-        outputs = self.model(**inputs)
-        return outputs['image_embeds']
+        inputs = self.processor(images = images, return_tensors = "pt")
+        outputs = self.model.get_image_features(**inputs)
+        return outputs
 
     # Generate embedding for the text(s)
     def generate_text_embedding(self, texts):

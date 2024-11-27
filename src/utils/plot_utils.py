@@ -45,7 +45,7 @@ class PlotUtils:
         assert len_ == len(labels_)
 
         _, ax = plt.subplots(1, len_, figsize = (3 * (len_), 6))
-        plt.suptitle(text, fontsize=16)
+        plt.suptitle(text, fontsize = 16)
 
         for i in range(len_):
             width, height = images[i].size

@@ -40,6 +40,15 @@ class Trainer:
         self.dataset_type = dataset_type
         self.models_path = os.path.join('../models', dataset_paths[self.dataset_type])
         os.makedirs(self.models_path, exist_ok = True)
+
+        self.predictions_path = os.path.join('../predictions', dataset_paths[self.dataset_type])
+        os.makedirs(self.predictions_path, exist_ok = True)
+
+        self.pos_predictions_path = os.path.join(self.predictions_path, 'positive')
+        os.makedirs(self.pos_predictions_path, exist_ok = True)
+
+        self.neg_predictions_path = os.path.join(self.predictions_path, 'negative')
+        os.makedirs(self.neg_predictions_path, exist_ok = True)
         
         return
         
@@ -91,19 +100,7 @@ class Trainer:
                 predicted_scores = self.model(query_embeddings.view(-1, query_embeddings.shape[-1]))
                 num_classes = predicted_scores.shape[-1]
                 predicted_scores_per_query = predicted_scores.view(batch_size, num_items, num_classes)
-                
-                # Iterate over each query in the batch
-                for i in range(batch_size):
-                    relevance_score = relevance_scores[i]
-                    predicted_scores_query = predicted_scores_per_query[i]
-
-                    top_k = torch.topk(predicted_scores_query[:, 1], k = precision_k)
-                    top_k_indices = top_k.indices
-                    
-                    gt_index = torch.argmax(relevance_score).item()
-                    precision_at_k = 1.0 if gt_index in top_k_indices else 0.0
-
-                    epoch_precision += precision_at_k
+                epoch_precision += self.calculate_precision_k(predicted_scores_per_query, relevance_scores, precision_k)
       
                 loss = self.criterion(predicted_scores, relevance_scores.view(-1))
                 epoch_loss += loss.item()
@@ -137,42 +134,85 @@ class Trainer:
     
         return
     
-    # TODO: Update this
-    def predict(self, iterator):
+
+    def predict(self):
+        iterator = self.test_loader
+
         # Set to eval mode
         self.model.eval()
 
-        ids = []
-        labels = []
-        probs = []
         with torch.no_grad():
 
-            for batch in iterator:
+            for batch in tqdm(iterator, desc = "Testing", leave = False):
 
-                x = batch['emb']
-                y = batch['label']
+                queries = batch['query_ids']
+                item_ids = batch['item_ids']
+                relevance_scores = batch['relevance_scores']
+                query_embeddings = batch['embs']
 
-                x = x.to(self.device)
+                batch_size, num_items, _ = query_embeddings.shape
+                predicted_scores = self.model(query_embeddings.view(-1, query_embeddings.shape[-1]))
+                num_classes = predicted_scores.shape[-1]
+                predicted_scores_per_query = predicted_scores.view(batch_size, num_items, num_classes)
 
-                y_pred = self.model(x)
+                self.save_recommendations(queries, item_ids, predicted_scores_per_query, relevance_scores)
 
-                y_prob = F.softmax(y_pred, dim = -1)
+        return
 
-                ids.append(batch['query_id'])
-                labels.append(y.cpu())
-                probs.append(y_prob.cpu())
-
-        ids = torch.cat(ids, dim = 0)
-        labels = torch.cat(labels, dim = 0)
-        probs = torch.cat(probs, dim = 0)
-
-        return ids, labels, probs
-    
     # TODO: update this
     def test(self):
         test_loss, test_acc = self.evaluate(self.test_loader)
         print(f'Test Loss: {test_loss:.4f}, Test Accuracy: {test_acc:.4f}')
         return
+    
+    def save_recommendations(self, queries, item_ids, predicted_scores_per_query, relevance_scores):
+        batch_size, _, _ = predicted_scores_per_query.shape
+        
+        # Iterate over each query in the batch
+        for i in range(batch_size):
+            query_id = queries[i]
+            items = item_ids[i]
+            predicted_scores_query = predicted_scores_per_query[i]
+            relevance_score = relevance_scores[i]
+
+            top_k = torch.topk(predicted_scores_query[:, 1], k = 10)
+            top_k_indices = top_k.indices
+
+            gt_index = torch.argmax(relevance_score).item()
+            predicted_gt_index = torch.where(top_k_indices == gt_index)[0]
+
+            dest_path = None
+            if predicted_gt_index < gt_index:
+                dest_path = self.pos_predictions_path
+            elif predicted_gt_index >= gt_index:
+                dest_path = self.neg_predictions_path
+
+            reordered_items = items[top_k_indices].tolist()
+            filename = os.path.join(dest_path, f"{query_id}.txt")
+            with open(filename, 'w') as f:
+                f.write("\n".join(map(str, reordered_items)))
+
+        return
+
+    def calculate_precision_k(self, predicted_scores_per_query, relevance_scores, precision_k):
+        batch_size, _, _ = predicted_scores_per_query.shape
+        
+        precision = 0
+        # Iterate over each query in the batch
+        for i in range(batch_size):
+            relevance_score = relevance_scores[i]
+            predicted_scores_query = predicted_scores_per_query[i]
+
+            # Sorting by class 1 (but if prob of 1 is less than 0.5?)
+            top_k = torch.topk(predicted_scores_query[:, 1], k = precision_k)
+            top_k_indices = top_k.indices
+            
+            gt_index = torch.argmax(relevance_score).item()
+            precision_at_k = 1.0 if gt_index in top_k_indices else 0.0
+
+            precision += precision_at_k
+        
+        return precision
 
     def calculate_accuracy(self, y_pred, y):
         top_pred = y_pred.argmax(1, keepdim = True)
