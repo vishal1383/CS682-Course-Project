@@ -1,9 +1,8 @@
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, random_split
 from transformers import CLIPModel, CLIPProcessor, AdamW
-from PIL import Image
 import os
-import pandas as pd
+import torch.nn.functional as F
 
 from src.finetuning.custom_clip_dataset import CustomCLIPDataset
 
@@ -12,50 +11,10 @@ dataset_paths = {
     'deep_fashion': 'fashion_dataset',
     'test_data': 'dataset'
 }
-# class CustomCLIPDataset(Dataset):
-#     def __init__(self, dataset_type, images, texts, processor, max_length = 77):
-#         """
-#         Custom dataset for CLIP fine-tuning
-        
-#         Args:
-#             images (list): List of image file paths or PIL Image objects
-#             texts (list): Corresponding list of text descriptions
-#             processor (CLIPProcessor): CLIP processor for image and text preprocessing
-#         """
-#         self.images = images
-#         self.texts = texts
-#         self.processor = processor
-#         self.max_length = max_length
-        
-#         self.dataset_type = dataset_type
-#         self.models_path = os.path.join('../models', dataset_paths[self.dataset_type], 'finetune')
-#         os.makedirs(self.models_path, exist_ok = True)
-
-    
-#     def __len__(self):
-#         return len(self.images)
-    
-#     def __getitem__(self, idx):
-#         # Load and preprocess image
-#         image = Image.open(self.images[idx]).convert("RGB")
-#         processed_image = self.processor(images=image, return_tensors="pt")['pixel_values'].squeeze()
-        
-#         # Preprocess text
-#         processed_text = self.processor(text=self.texts[idx], 
-#                                         return_tensors="pt",  
-#                                         truncation=True,
-#                                         padding='max_length',
-#                                         max_length=self.max_length,)
-        
-#         return {
-#             'image': processed_image,
-#             'text': processed_text['input_ids'].squeeze(),
-#             'attention_mask': processed_text['attention_mask'].squeeze()
-#         }
     
 class CLIPFinetune():
 
-    def __init__(self, dataset_type, images, texts, model_name='openai/clip-vit-base-patch32', learning_rate=5e-5, batch_size=16, epochs=30):
+    def __init__(self, dataset_type, images, texts, model_name='openai/clip-vit-base-patch32', learning_rate=5e-5, batch_size=16, epochs=30, patience=1, val_split=0.1):
         self.images = images
 
          # Load pre-trained CLIP model and processor
@@ -64,12 +23,19 @@ class CLIPFinetune():
 
         # Prepare dataset and dataloader
         dataset = CustomCLIPDataset(images, texts, self.processor)
-        self.dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        
+        val_size = int(len(dataset) * val_split)
+        train_size = len(dataset) - val_size
+        train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+
+        self.train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        self.val_loader = DataLoader(val_dataset, batch_size=batch_size)
 
         # Prepare optimizer and device
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
         self.optimizer = AdamW(self.model.parameters(), lr=learning_rate)
+        self.patience = patience
 
         self.epochs = epochs
         
@@ -77,41 +43,94 @@ class CLIPFinetune():
         self.models_path = os.path.join('../models', dataset_paths[self.dataset_type], 'finetune')
         os.makedirs(self.models_path, exist_ok = True)
 
+    def info_nce_loss(self, image_features, text_features, temperature=0.8):
+        batch_size = image_features.shape[0]
+        
+        # Normalize features
+        image_features = F.normalize(image_features, dim=-1)
+        text_features = F.normalize(text_features, dim=-1)
+        
+        # Calculate similarity matrix
+        # logits = torch.matmul(image_features, text_features.T) / temperature
+        logits = torch.matmul(text_features, image_features.T) / temperature
+        # Labels are all diagonal elements
+        labels = torch.arange(batch_size, device=image_features.device)
+        
+        # Calculate loss for both directions
+        loss_t2i = F.cross_entropy(logits, labels)
+        # loss_t2i = F.cross_entropy(logits.T, labels)
+        return loss_t2i
+        # return (loss_i2t + loss_t2i) / 2
+
 
     def train(self):
-        # Training loop
-        self.model.train()
+        best_val_loss = float('inf')
+        patience_counter = 0
+        best_model = None
+        
         for epoch in range(self.epochs):
-            total_loss = 0
-            for batch in self.dataloader:
-                # Move batch to device
+            # Training phase
+            self.model.train()
+            train_loss = 0
+            for batch in self.train_loader:
                 images = batch['image'].to(self.device)
                 texts = batch['text'].to(self.device)
                 attention_mask = batch['attention_mask'].to(self.device)
                 
-                # Zero gradients
                 self.optimizer.zero_grad()
-                
-                # Forward pass
                 outputs = self.model(input_ids=texts, 
-                                attention_mask=attention_mask, 
-                                pixel_values=images,
-                                return_loss=True)
-                loss = outputs.loss
+                            attention_mask=attention_mask, 
+                            pixel_values=images,
+                            return_loss=False)
                 
-                # Backward pass and optimization
+                loss = self.info_nce_loss(outputs.image_embeds, outputs.text_embeds)
                 loss.backward()
                 self.optimizer.step()
+                train_loss += loss.item()
+            
+            # Validation phase
+            val_loss = self.evaluate(self.model, self.val_loader, self.device)
+            
+            print(f"Epoch {epoch+1}/{self.epochs}")
+            print(f"Training Loss: {train_loss/len(self.train_loader):.4f}")
+            print(f"Validation Loss: {val_loss:.4f}")
+            
+            # Early stopping check
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                patience_counter = 0
+                best_model = self.model.state_dict().copy()
+            else:
+                patience_counter += 1
+                if patience_counter >= self.patience:
+                    print(f"Early stopping triggered after {epoch+1} epochs")
+                    break
+         
+        self.model.load_state_dict(best_model)
+        self.model = self.model.to('cpu')
+
+        self.model.save_pretrained(os.path.join(self.models_path, "fine_tuned_clip_modelvlm"), safe_serialization=True)
+        self.processor.save_pretrained(os.path.join(self.models_path, "fine_tuned_clip_processorvlm"))
+        return self.model, self.processor
+
+    def evaluate(self, dataloader):
+        self.model.eval()
+        total_loss = 0
+        with torch.no_grad():
+            for batch in dataloader:
+                images = batch['image'].to(self.device)
+                texts = batch['text'].to(self.device)
+                attention_mask = batch['attention_mask'].to(self.device)
                 
+                outputs = self.model(input_ids=texts, 
+                            attention_mask=attention_mask, 
+                            pixel_values=images,
+                            return_loss=False)
+                
+                loss = self.info_nce_loss(outputs.image_embeds, outputs.text_embeds)
                 total_loss += loss.item()
         
-            print(f"Epoch {epoch+1}/{self.epochs}, Loss: {total_loss/len(self.dataloader)}")
-    
-        self.model = self.model.to('cpu')  # Move to CPU first if needed
-        self.model.save_pretrained(os.path.join(self.models_path, "fine_tuned_clip_model"), safe_serialization=True)
-        self.processor.save_pretrained(os.path.join(self.models_path, "fine_tuned_clip_processor"))
-        
-        return self.model, self.processor        
+        return total_loss / len(dataloader)     
 
 
 # def fine_tune_clip(self, images, texts, model_name='openai/clip-vit-base-patch32', 

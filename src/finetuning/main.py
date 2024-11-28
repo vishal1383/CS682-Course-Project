@@ -35,8 +35,8 @@ def parse_args():
 def load_checkpoints(args):
     models_path = os.path.join('../models', dataset_paths[args.dataset_type], 'finetune')
     
-    model = CLIPModel.from_pretrained(os.path.join(models_path, "fine_tuned_clip_model"))
-    processor = CLIPProcessor.from_pretrained(os.path.join(models_path, "fine_tuned_clip_processor"))
+    model = CLIPModel.from_pretrained(os.path.join(models_path, "fine_tuned_clip_modelvlm"))
+    processor = CLIPProcessor.from_pretrained(os.path.join(models_path, "fine_tuned_clip_processorvlm"))
     return model, processor
 
 def load_data(args):
