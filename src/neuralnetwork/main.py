@@ -29,6 +29,7 @@ def parse_args():
     parser.add_argument('--embeddings_root_path', type = str, default= '../embeddings', help = "Path to embeddings")
     parser.add_argument('--model_root_path', type = str, default = '../models', help = "Path to save model")
     parser.add_argument('--predictions_root_path', type = str, default = '../predictions', help = "Path to save the predictions")
+    parser.add_argument('--predictions_type', type = str, choices = ['positive', 'negative'], help = "Type of predictions to show")
     return parser.parse_args()
 
 def load_data(data_dir_path, embeddings_dir_path):
@@ -83,7 +84,8 @@ def run_inference(args):
 
 # Show recommendations after re-ranking vs before re-ranking
 # Could show positive or negative examples - use type parameter
-def show_recommendations(args, type = 'positive', examples = 10, shuffle = True):
+def show_recommendations(args, examples = 10, shuffle = True):
+    type = args.predictions_type
     plotUtils = PlotUtils()
     
     data_df = pd.read_csv(os.path.join(args.raw_data_root_path, dataset_paths[args.dataset_type], 'dataset.csv'))[['id', 'query']]

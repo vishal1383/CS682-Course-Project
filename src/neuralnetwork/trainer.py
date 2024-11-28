@@ -135,11 +135,16 @@ class Trainer:
         return
     
 
-    def predict(self):
-        iterator = self.test_loader
+    def predict(self, mode = 'val', precision_k = 3):
+        iterator = None
+        if mode == 'val':
+            iterator = self.test_loader
+        elif mode == 'test':    
+            iterator = self.test_loader
 
         # Set to eval mode
         self.model.eval()
+        epoch_precision = 0
 
         with torch.no_grad():
 
@@ -154,9 +159,11 @@ class Trainer:
                 predicted_scores = self.model(query_embeddings.view(-1, query_embeddings.shape[-1]))
                 num_classes = predicted_scores.shape[-1]
                 predicted_scores_per_query = predicted_scores.view(batch_size, num_items, num_classes)
+                epoch_precision += self.calculate_precision_k(predicted_scores_per_query, relevance_scores, precision_k)
 
                 self.save_recommendations(queries, item_ids, predicted_scores_per_query, relevance_scores)
 
+        print(f'Preicision@{precision_k} for {mode} data', epoch_precision / (len(iterator) * batch_size))
         return
 
     # TODO: update this
