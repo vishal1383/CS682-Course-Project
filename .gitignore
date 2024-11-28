@@ -16,7 +16,7 @@ __pycache__/
 /datasets/fashion_dataset/rcnn_cropped_images/*
 
 # Embeddings
-/embeddings/fashion_dataset
+/embeddings/fashion_dataset/*
 
 # Models
-/models/fashion_dataset
+/models/fashion_dataset/finetune/*
