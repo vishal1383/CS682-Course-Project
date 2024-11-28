@@ -19,6 +19,7 @@ class RawDataset:
             'deep_fashion': 'fashion_dataset',
             'test_data': 'dataset'
         }
+        self.model_type = 'clip'
         
         # Create folders for dataset
         # - embeddings/{dataset}
@@ -27,7 +28,7 @@ class RawDataset:
 
         # Create folders for embeddings
         # - embeddings/{dataset}
-        self.embedding_prefix = os.path.join(ROOT_EMBEDDINGS_FOLDER, self.dataset_paths[dataset_type])
+        self.embedding_prefix = os.path.join(ROOT_EMBEDDINGS_FOLDER, self.dataset_paths[dataset_type], self.model_type)
         os.makedirs(self.embedding_prefix, exist_ok = True)
         self.embbeding_util = GenerateEmbeddings()
         
@@ -78,6 +79,7 @@ class RawDataset:
             image_filenames = [data_df.iloc[i]['filename'] for i in range(len(data_df))]
             self.image_paths = [os.path.join(self.dataset_prefix, 'images', image_name) for image_name in image_filenames]
             self.custom_features_paths = [os.path.join(self.dataset_prefix, 'rcnn_cropped_images', image_name.split('.')[0], image_name) for image_name in image_filenames]
+            self.dominant_colours_paths = [os.path.join(self.dataset_prefix, 'dominant_colours', image_name.split('.')[0] + '.txt') for image_name in image_filenames]
 
             self.texts = data_df['query'].to_list()
 
@@ -90,8 +92,19 @@ class RawDataset:
                 # TODO: If image is not present in custom_feats
                 os.makedirs(os.path.join(self.embedding_custom_feat_prefix, str(ids[i])), exist_ok = True)
                 if os.path.exists(self.custom_features_paths[i]):
-                    custom_feat_embs = self.embbeding_util.generate_image_embedding([Image.open(self.custom_features_paths[i])])
-                    self.embbeding_util.save_embeddings(custom_feat_embs, os.path.join(self.embedding_custom_feat_prefix, str(ids[i]), str(ids[i]) + '.emb'))
+                    crop_img_embs = self.embbeding_util.generate_image_embedding([Image.open(self.custom_features_paths[i])])
+                    self.embbeding_util.save_embeddings(crop_img_embs, os.path.join(self.embedding_custom_feat_prefix, str(ids[i]), str(ids[i]) + '_crop.emb'))
+
+                # print(self.dominant_colours_paths[i])
+                if os.path.exists(self.dominant_colours_paths[i]):
+                    image = None
+                    with open(self.dominant_colours_paths[i], 'r') as f:
+                        rgb_line = f.readline().strip()
+                        rgb_tuple = tuple(map(int, rgb_line.strip('()').split(',')))
+                        image = Image.new("RGB", (224, 224), color = rgb_tuple)
+                    
+                    dominant_color_embs = self.embbeding_util.generate_image_embedding([image])
+                    self.embbeding_util.save_embeddings(dominant_color_embs, os.path.join(self.embedding_custom_feat_prefix, str(ids[i]), str(ids[i]) + '_color.emb'))
 
                 if i == len(self.texts) - 1 or (i >= 100 and i % 100 == 0):
                     print('|', '-' * 10, 'Done processing ' + str(i + 1) + ' text-image pairs')

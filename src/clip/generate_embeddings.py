@@ -9,10 +9,10 @@ MODEL = 'openai/clip-vit-base-patch32'
 EMBEDDING_DIM = 512
 
 class GenerateEmbeddings:
-    def __init__(self):
+    def __init__(self, model = None, processor = None):
         self.text_preprocessor = TextPreprocessor()
-        self.model = CLIPModel.from_pretrained(MODEL)
-        self.processor = CLIPProcessor.from_pretrained(MODEL)
+        self.model = CLIPModel.from_pretrained(MODEL) if model == None else model
+        self.processor = CLIPProcessor.from_pretrained(MODEL) if processor == None else processor
         return
 
     def generate_embeddings(self, texts, images):

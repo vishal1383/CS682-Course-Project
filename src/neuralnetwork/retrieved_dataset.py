@@ -43,7 +43,7 @@ class RetrievedDataset(Dataset):
             # Implementation details:
             # - Assigning binary scores (could try custom scores) - i.e GT item gets 1 and rest 0
             # print(os.path.basename(file))
-            query_id = os.path.basename(file).split('.')[0]
+            query_id = os.path.basename(file).split('_')[0]
             query_samples = []
             recommendations = []
             with open(file, 'r') as f:
@@ -94,11 +94,17 @@ class RetrievedDataset(Dataset):
             # Add custom feature embeddings for the item
             custom_feat_emb = torch.zeros_like(item_emb)
             custom_feat_dir_path = os.path.join(self.embeddings_dir_path, 'custom_features', item_id)
-            for custom_feat_name in os.listdir(custom_feat_dir_path):
+            
+            custom_feat_files = os.listdir(custom_feat_dir_path)
+            if len(custom_feat_files) > 0:
+                item_emb = torch.zeros_like(item_emb)
+
+            for custom_feat_name in custom_feat_files:
                 custom_feat_path = os.path.join(custom_feat_dir_path, custom_feat_name)
                 custom_feat_emb += torch.tensor(self.nd.get_embeddings(custom_feat_path)[0], dtype = torch.float32)
 
             # Adding item and custom features embeddings
+            # TODO: concat origin emb with custom feat
             item_emb += custom_feat_emb
         
         item_emb = item_emb.flatten()

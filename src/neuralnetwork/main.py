@@ -54,7 +54,7 @@ def run_model(args):
     model = MLP(input_dim = 1024, output_dim = 2)
     
     data_dir_path = os.path.join(args.retrieved_data_root_path, dataset_paths[args.dataset_type], str(args.k))
-    embeddings_dir_path = os.path.join(args.embeddings_root_path, dataset_paths[args.dataset_type])
+    embeddings_dir_path = os.path.join(args.embeddings_root_path, dataset_paths[args.dataset_type], 'clip')
     train_dataset, val_dataset, test_dataset = load_data(data_dir_path, embeddings_dir_path)
     
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -69,10 +69,10 @@ def run_inference(args):
     model = MLP(input_dim = 1024, output_dim = 2)
 
     # Load the saved state_dict
-    model.load_state_dict(torch.load(os.path.join(args.model_root_path, dataset_paths[args.dataset_type], 'best_model_loss.pt')))
+    model.load_state_dict(torch.load(os.path.join(args.model_root_path, dataset_paths[args.dataset_type], 'neuralnetwork', 'best_model_loss.pt')))
     
     data_dir_path = os.path.join(args.retrieved_data_root_path, dataset_paths[args.dataset_type], str(args.k))
-    embeddings_dir_path = os.path.join(args.embeddings_root_path, dataset_paths[args.dataset_type])
+    embeddings_dir_path = os.path.join(args.embeddings_root_path, dataset_paths[args.dataset_type], 'clip') # could this to clip
     train_dataset, val_dataset, test_dataset = load_data(data_dir_path, embeddings_dir_path)
     
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -83,18 +83,18 @@ def run_inference(args):
 
 # Show recommendations after re-ranking vs before re-ranking
 # Could show positive or negative examples - use type parameter
-def show_recommendations(args, type = 'positive', shuffle = True):
+def show_recommendations(args, type = 'positive', examples = 10, shuffle = True):
     plotUtils = PlotUtils()
     
     data_df = pd.read_csv(os.path.join(args.raw_data_root_path, dataset_paths[args.dataset_type], 'dataset.csv'))[['id', 'query']]
     id_query_dict = dict(zip(data_df['id'], data_df['query']))
     
-    predictions_path = os.path.join(args.predictions_root_path, dataset_paths[args.dataset_type], type)
+    predictions_path = os.path.join(args.predictions_root_path, dataset_paths[args.dataset_type], 'neuralnetwork', type)
     file_names = os.listdir(predictions_path)
     if shuffle == True:
         random.shuffle(file_names)
     
-    for file_name in file_names:
+    for file_name in file_names[:examples]:
         query_id = file_name.split('.')[0]
         text = id_query_dict[int(query_id)]
         
@@ -121,7 +121,7 @@ def show_recommendations(args, type = 'positive', shuffle = True):
 
         # Plot recommendations before re-ranking
         # TODO: Change '10' here
-        clip_img_path = os.path.join(args.retrieved_data_root_path, dataset_paths[args.dataset_type], '10', file_name)
+        clip_img_path = os.path.join(args.retrieved_data_root_path, dataset_paths[args.dataset_type], '10', query_id + '_c.txt')
         with open(clip_img_path, 'r') as file:
             clip_recommended_images = {'ids': [], 'imgs': []}
             

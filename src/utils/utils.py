@@ -16,6 +16,10 @@ def split_dataset(directory_path, train_ratio = 0.7, val_ratio = 0.15, test_rati
             warning = "Warning: Ignoring hidden files/folders - " + f
             warnings.warn(warning)
             continue
+        
+        if f.split('.')[0].endswith('_ic'):
+            # Ignoring the incorrect files
+            continue
 
         if os.path.isfile(os.path.join(directory_path, f)):
             files.append(os.path.join(directory_path, f))

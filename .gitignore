@@ -13,3 +13,10 @@ __pycache__/
 
 # Datasets
 /datasets/fashion_dataset/images/*
+/datasets/fashion_dataset/rcnn_cropped_images/*
+
+# Embeddings
+/embeddings/fashion_dataset
+
+# Models
+/models/fashion_dataset

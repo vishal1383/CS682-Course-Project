@@ -2,6 +2,9 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from PIL import Image
 import os
+import random
+
+from sklearn.model_selection import train_test_split
 
 from src.clip.generate_embeddings import ROOT_EMBEDDINGS_FOLDER
 from src.clip.raw_dataset import *
@@ -15,8 +18,7 @@ class Metrics():
         self.bs = 1
         self.top_k = top_k
         self.num_examples = num_examples
-
-        self.type = dataset_type
+        self.model_type = 'clip'
         self.dataset_paths = {
             'deep_fashion': 'fashion_dataset',
             'test_data': 'dataset'
@@ -25,21 +27,30 @@ class Metrics():
         self.dataset_prefix = os.path.join(ROOT_DATASET_FOLDER, self.dataset_paths[dataset_type])
         self.data_df = pd.read_csv(os.path.join(self.dataset_prefix, 'dataset.csv'))
         ids = self.data_df['id'].tolist()[:self.num_examples]
+
+        seed = 42
+        random.seed(seed)
+        random.shuffle(ids)
+        self.train_ids, temp_ids = train_test_split(ids, train_size = 0.7, random_state = seed)
+        self.val_ids, self.test_ids = train_test_split(temp_ids, test_size = 0.15 / (0.15 + 0.15), random_state = seed)
+        # print('train val test ids', self.train_ids, self.val_ids, self.test_ids)
+        print('train val test ids', self.val_ids)
+
         # Map indices to actual ids of the samples
         self.indices_to_ids = {index: value for index, value in enumerate(ids)}
-        
-        self.metrics_path = os.path.join(ROOT_METRICS_FOLDER, self.dataset_paths[dataset_type])
-        os.makedirs(self.metrics_path, exist_ok = True)
+        self.ids_to_indices = {value: index for index, value in enumerate(ids)}
 
         self.retrieved_results_path = os.path.join('../retrieved_items', self.dataset_paths[dataset_type], str(top_k))
         os.makedirs(self.retrieved_results_path, exist_ok = True)
         
-        self.embeddings_path = os.path.join(ROOT_EMBEDDINGS_FOLDER, self.dataset_paths[dataset_type])
+        self.embeddings_path = os.path.join(ROOT_EMBEDDINGS_FOLDER, self.dataset_paths[dataset_type], self.model_type)
         self.embedding_query_prefix = os.path.join(self.embeddings_path, 'queries')
         self.embedding_item_prefix = os.path.join(self.embeddings_path, 'items')
+
+        self.metrics_path = os.path.join(ROOT_METRICS_FOLDER, self.dataset_paths[dataset_type], self.model_type)
+        os.makedirs(self.metrics_path, exist_ok = True)
         
         self.similarity_matrix = np.zeros((num_examples, top_k))
-
         self.similarity_matrix_path = os.path.join(self.metrics_path, 'similarity-matrix_' + str(self.top_k) + '.npy')
         if compute_sim:
             self.compute_similarity()
@@ -65,43 +76,69 @@ class Metrics():
             texts.append(text)
             images.append(image)
 
-        self.similarity_matrix = cosine_similarity(texts, images)
-        self.similarity_matrix = np.argsort(-self.similarity_matrix, axis = 1)[:, :self.top_k]
+        self.similarity_matrix_orig = cosine_similarity(texts, images)
+        self.similarity_matrix = np.argsort(-self.similarity_matrix_orig, axis = 1)[:, :self.top_k]
 
         np.save(self.similarity_matrix_path,  self.similarity_matrix)
         print('Saved similarity matrix at ' + self.similarity_matrix_path)
         print('\n' + '-' * 50)
         return
 
-    def compute_precision(self):
-        pass
-
     def compute_recall(self):
-        # for every text query
+        # TODO: Might have to write to a file
+        # for every text query - Entire dataset
         sim = np.load(self.similarity_matrix_path).astype(int)
-        cnt = sum([(i in sim[i]) for i in range(sim.shape[0])])/sim.shape[0]
-        print(f'\nRecall@{self.top_k} for {self.num_examples} examples is: ', cnt)
+        recall = sum([(i in sim[i]) for i in range(sim.shape[0])])/sim.shape[0]
+        print(f'\nRecall@{self.top_k} for Entire dataset with {self.num_examples} examples is: ', recall)
         print('\n' + '-' * 50)
-        return cnt
+
+        # Train data
+        train_indices = [self.ids_to_indices[id] for id in self.train_ids]
+        similarity_matrix_train = np.argsort(-self.similarity_matrix_orig[train_indices, :][:, train_indices], axis = 1)[:, :self.top_k]
+        recall_train = sum([(i in similarity_matrix_train[i]) for i in range(similarity_matrix_train.shape[0])])/similarity_matrix_train.shape[0]
+        print(f'\nRecall@{self.top_k} for Train dataset with {len(train_indices)} examples is: ', recall_train)
+        print('\n' + '-' * 50)
+
+        # Val data
+        val_indices = [self.ids_to_indices[id] for id in self.val_ids]
+        similarity_matrix_val = np.argsort(-self.similarity_matrix_orig[val_indices, :][:, val_indices], axis = 1)[:, :self.top_k]
+        recall_val = sum([(i in similarity_matrix_val[i]) for i in range(similarity_matrix_val.shape[0])])/similarity_matrix_val.shape[0]
+        print(f'\nRecall@{self.top_k} for Val dataset with {len(val_indices)} examples is: ', recall_val)
+        print('\n' + '-' * 50)
+
+        # Test data
+        test_indices = [self.ids_to_indices[id] for id in self.test_ids]
+        similarity_matrix_test = np.argsort(-self.similarity_matrix_orig[test_indices, :][:, test_indices], axis = 1)[:, :self.top_k]
+        recall_test = sum([(i in similarity_matrix_test[i]) for i in range(similarity_matrix_test.shape[0])])/similarity_matrix_test.shape[0]
+        print(f'\nRecall@{self.top_k} for Test dataset with {len(test_indices)} examples is: ', recall_test)
+        print('\n' + '-' * 50)
+
+        return recall
     
+    # Save for all examples (if GT is present in top_k or not)
     def save_recommendations(self):
         indices = np.arange(0, self.similarity_matrix.shape[0])
         results = np.any(self.similarity_matrix == indices[:, None], axis = 1)
         correct_examples = np.where(results == True)[0]
+        incorrect_examples = np.where(results == False)[0]
 
-        print(correct_examples)
-        recommendations = np.vectorize(self.indices_to_ids.get)(self.similarity_matrix[correct_examples])
+        recommendations = np.vectorize(self.indices_to_ids.get)(self.similarity_matrix)
 
         # TODO: they wil retrieved in ascending order
         # query_ids = np.array((self.indices_to_ids.values())[correct_examples]
         
         for i, row in enumerate(recommendations):
-            filename = os.path.join(self.retrieved_results_path, f"{self.indices_to_ids[correct_examples[i]]}.txt")
+            type = None
+            if i in correct_examples:
+                type = '_c'
+            elif i in incorrect_examples:
+                type = '_ic'
+
+            filename = os.path.join(self.retrieved_results_path, str(self.indices_to_ids[i]) + type + ".txt")
             with open(filename, 'w') as f:
                 f.write("\n".join(map(str, row)))
         
         return
-
     
     # Generates 'num_examples' recommendations for a give text query for different scenarios:
     # 1. Incorrect recommendations

@@ -38,10 +38,10 @@ class Trainer:
         self.optimizer = optim.Adam(self.model.parameters(), lr = lr)
 
         self.dataset_type = dataset_type
-        self.models_path = os.path.join('../models', dataset_paths[self.dataset_type])
+        self.models_path = os.path.join('../models', dataset_paths[self.dataset_type], 'neuralnetwork')
         os.makedirs(self.models_path, exist_ok = True)
 
-        self.predictions_path = os.path.join('../predictions', dataset_paths[self.dataset_type])
+        self.predictions_path = os.path.join('../predictions', dataset_paths[self.dataset_type], 'neuralnetwork')
         os.makedirs(self.predictions_path, exist_ok = True)
 
         self.pos_predictions_path = os.path.join(self.predictions_path, 'positive')
