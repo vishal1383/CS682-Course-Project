@@ -21,7 +21,7 @@ class Metrics():
         self.model_type = 'clip'
         self.dataset_paths = {
             'deep_fashion': 'fashion_dataset',
-            'test_data': 'dataset'
+            'test_data': 'test_dataset'
         }
         
         self.dataset_prefix = os.path.join(ROOT_DATASET_FOLDER, self.dataset_paths[dataset_type])
