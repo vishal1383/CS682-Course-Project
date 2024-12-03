@@ -1,0 +1,635 @@
+
+Computing metrics for top-1 recommendations: 
+
+Computing similarity matrix for all image-text pairs
+Saved similarity matrix at ../metrics/fashion_dataset/finetune/similarity-matrix_1.npy
+
+--------------------------------------------------
+
+Recall@1 for Entire dataset with 5000 examples is:  0.2444
+
+--------------------------------------------------
+
+Recall@1 for train dataset with 3500 examples is:  0.29085714285714287
+
+Recall@1 for train dataset for different sub-categories with 3500 examples: 
+-> Watches : 0.1761904761904762 37/210
+-> Belts : 0.1780821917808219 13/73
+-> Sandal : 0.1794871794871795 14/78
+-> Wallets : 0.1794871794871795 14/78
+-> Jewellery : 0.2 20/100
+-> Eyewear : 0.24285714285714285 17/70
+-> Shoes : 0.24592833876221498 151/614
+-> Skin : 0.2727272727272727 3/11
+-> Topwear : 0.29597197898423816 338/1142
+-> Bags : 0.31007751937984496 80/258
+-> Lips : 0.32727272727272727 18/55
+-> Socks : 0.3409090909090909 15/44
+-> Flip Flops : 0.35365853658536583 29/82
+-> Fragrance : 0.37362637362637363 34/91
+-> Bottomwear : 0.4 82/205
+-> Shoe Accessories : 0.4 2/5
+-> Ties : 0.4 8/20
+-> Innerwear : 0.4266666666666667 64/150
+-> Skin Care : 0.42857142857142855 3/7
+-> Scarves : 0.4444444444444444 4/9
+-> Dress : 0.4594594594594595 17/37
+-> Nails : 0.5 7/14
+-> Headwear : 0.5357142857142857 15/28
+-> Saree : 0.55 11/20
+-> Makeup : 0.5714285714285714 8/14
+-> Mufflers : 0.6 3/5
+-> Apparel Set : 0.6428571428571429 9/14
+-> Accessories : 0.6666666666666666 8/12
+-> Loungewear and Nightwear : 0.717948717948718 28/39
+-> Free Gifts : 0.7272727272727273 8/11
+-> Bath and Body : 1.0 1/1
+-> Beauty Accessories : 1.0 1/1
+-> Sports Accessories : 1.0 1/1
+-> Water Bottle : 1.0 1/1
+
+--------------------------------------------------
+
+Recall@1 for val dataset with 1500 examples is:  0.4226666666666667
+
+Recall@1 for val dataset for different sub-categories with 1500 examples: 
+-> Watches : 0.21428571428571427 24/112
+-> Eyewear : 0.2857142857142857 8/28
+-> Jewellery : 0.35555555555555557 16/45
+-> Belts : 0.4074074074074074 11/27
+-> Topwear : 0.41025641025641024 192/468
+-> Shoes : 0.4127659574468085 97/235
+-> Bags : 0.4146341463414634 51/123
+-> Lips : 0.42857142857142855 12/28
+-> Wallets : 0.43333333333333335 13/30
+-> Bottomwear : 0.45544554455445546 46/101
+-> Fragrance : 0.4864864864864865 18/37
+-> Flip Flops : 0.5 13/26
+-> Innerwear : 0.5394736842105263 41/76
+-> Socks : 0.5416666666666666 13/24
+-> Sandal : 0.5428571428571428 19/35
+-> Makeup : 0.5555555555555556 5/9
+-> Dress : 0.6 9/15
+-> Eyes : 0.6666666666666666 2/3
+-> Skin : 0.6666666666666666 2/3
+-> Ties : 0.6666666666666666 4/6
+-> Mufflers : 0.75 3/4
+-> Nails : 0.75 6/8
+-> Loungewear and Nightwear : 0.7692307692307693 10/13
+-> Saree : 0.7857142857142857 11/14
+-> Headwear : 0.8461538461538461 11/13
+-> Accessories : 1.0 3/3
+-> Apparel Set : 1.0 3/3
+-> Free Gifts : 1.0 3/3
+-> Gloves : 1.0 1/1
+-> Scarves : 1.0 4/4
+-> Skin Care : 1.0 3/3
+
+--------------------------------------------------
+
+Recall@1 for test dataset with 1500 examples is:  0.4226666666666667
+
+Recall@1 for test dataset for different sub-categories with 1500 examples: 
+-> Watches : 0.21428571428571427 24/112
+-> Eyewear : 0.2857142857142857 8/28
+-> Jewellery : 0.35555555555555557 16/45
+-> Belts : 0.4074074074074074 11/27
+-> Topwear : 0.41025641025641024 192/468
+-> Shoes : 0.4127659574468085 97/235
+-> Bags : 0.4146341463414634 51/123
+-> Lips : 0.42857142857142855 12/28
+-> Wallets : 0.43333333333333335 13/30
+-> Bottomwear : 0.45544554455445546 46/101
+-> Fragrance : 0.4864864864864865 18/37
+-> Flip Flops : 0.5 13/26
+-> Innerwear : 0.5394736842105263 41/76
+-> Socks : 0.5416666666666666 13/24
+-> Sandal : 0.5428571428571428 19/35
+-> Makeup : 0.5555555555555556 5/9
+-> Dress : 0.6 9/15
+-> Eyes : 0.6666666666666666 2/3
+-> Skin : 0.6666666666666666 2/3
+-> Ties : 0.6666666666666666 4/6
+-> Mufflers : 0.75 3/4
+-> Nails : 0.75 6/8
+-> Loungewear and Nightwear : 0.7692307692307693 10/13
+-> Saree : 0.7857142857142857 11/14
+-> Headwear : 0.8461538461538461 11/13
+-> Accessories : 1.0 3/3
+-> Apparel Set : 1.0 3/3
+-> Free Gifts : 1.0 3/3
+-> Gloves : 1.0 1/1
+-> Scarves : 1.0 4/4
+-> Skin Care : 1.0 3/3
+
+--------------------------------------------------
+
+----------------------------------------------------------------------------------------------------
+
+Computing metrics for top-3 recommendations: 
+
+Computing similarity matrix for all image-text pairs
+Saved similarity matrix at ../metrics/fashion_dataset/finetune/similarity-matrix_3.npy
+
+--------------------------------------------------
+
+Recall@3 for Entire dataset with 5000 examples is:  0.4508
+
+--------------------------------------------------
+
+Recall@3 for train dataset with 3500 examples is:  0.5274285714285715
+
+Recall@3 for train dataset for different sub-categories with 3500 examples: 
+-> Watches : 0.3476190476190476 73/210
+-> Belts : 0.3835616438356164 28/73
+-> Sandal : 0.3974358974358974 31/78
+-> Wallets : 0.41025641025641024 32/78
+-> Jewellery : 0.45 45/100
+-> Shoes : 0.4739413680781759 291/614
+-> Eyewear : 0.5 35/70
+-> Topwear : 0.5061295971978984 578/1142
+-> Skin Care : 0.5714285714285714 4/7
+-> Bags : 0.5891472868217055 152/258
+-> Lips : 0.6 33/55
+-> Fragrance : 0.6373626373626373 58/91
+-> Bottomwear : 0.6536585365853659 134/205
+-> Socks : 0.6818181818181818 30/44
+-> Flip Flops : 0.6829268292682927 56/82
+-> Ties : 0.7 14/20
+-> Innerwear : 0.76 114/150
+-> Dress : 0.8108108108108109 30/37
+-> Skin : 0.8181818181818182 9/11
+-> Makeup : 0.8571428571428571 12/14
+-> Apparel Set : 0.9285714285714286 13/14
+-> Headwear : 0.9285714285714286 26/28
+-> Nails : 0.9285714285714286 13/14
+-> Loungewear and Nightwear : 0.9487179487179487 37/39
+-> Saree : 0.95 19/20
+-> Accessories : 1.0 12/12
+-> Bath and Body : 1.0 1/1
+-> Beauty Accessories : 1.0 1/1
+-> Free Gifts : 1.0 11/11
+-> Mufflers : 1.0 5/5
+-> Scarves : 1.0 9/9
+-> Shoe Accessories : 1.0 5/5
+-> Sports Accessories : 1.0 1/1
+-> Water Bottle : 1.0 1/1
+
+--------------------------------------------------
+
+Recall@3 for val dataset with 1500 examples is:  0.6646666666666666
+
+Recall@3 for val dataset for different sub-categories with 1500 examples: 
+-> Watches : 0.4017857142857143 45/112
+-> Shoes : 0.6127659574468085 144/235
+-> Topwear : 0.655982905982906 307/468
+-> Jewellery : 0.6666666666666666 30/45
+-> Bags : 0.6747967479674797 83/123
+-> Eyewear : 0.6785714285714286 19/28
+-> Lips : 0.6785714285714286 19/28
+-> Bottomwear : 0.6831683168316832 69/101
+-> Wallets : 0.7333333333333333 22/30
+-> Belts : 0.7407407407407407 20/27
+-> Fragrance : 0.7567567567567568 28/37
+-> Sandal : 0.8 28/35
+-> Flip Flops : 0.8076923076923077 21/26
+-> Dress : 0.8666666666666667 13/15
+-> Innerwear : 0.868421052631579 66/76
+-> Socks : 0.875 21/24
+-> Makeup : 0.8888888888888888 8/9
+-> Saree : 0.9285714285714286 13/14
+-> Accessories : 1.0 3/3
+-> Apparel Set : 1.0 3/3
+-> Eyes : 1.0 3/3
+-> Free Gifts : 1.0 3/3
+-> Gloves : 1.0 1/1
+-> Headwear : 1.0 13/13
+-> Loungewear and Nightwear : 1.0 13/13
+-> Mufflers : 1.0 4/4
+-> Nails : 1.0 8/8
+-> Scarves : 1.0 4/4
+-> Skin : 1.0 3/3
+-> Skin Care : 1.0 3/3
+-> Ties : 1.0 6/6
+
+--------------------------------------------------
+
+Recall@3 for test dataset with 1500 examples is:  0.6646666666666666
+
+Recall@3 for test dataset for different sub-categories with 1500 examples: 
+-> Watches : 0.4017857142857143 45/112
+-> Shoes : 0.6127659574468085 144/235
+-> Topwear : 0.655982905982906 307/468
+-> Jewellery : 0.6666666666666666 30/45
+-> Bags : 0.6747967479674797 83/123
+-> Eyewear : 0.6785714285714286 19/28
+-> Lips : 0.6785714285714286 19/28
+-> Bottomwear : 0.6831683168316832 69/101
+-> Wallets : 0.7333333333333333 22/30
+-> Belts : 0.7407407407407407 20/27
+-> Fragrance : 0.7567567567567568 28/37
+-> Sandal : 0.8 28/35
+-> Flip Flops : 0.8076923076923077 21/26
+-> Dress : 0.8666666666666667 13/15
+-> Innerwear : 0.868421052631579 66/76
+-> Socks : 0.875 21/24
+-> Makeup : 0.8888888888888888 8/9
+-> Saree : 0.9285714285714286 13/14
+-> Accessories : 1.0 3/3
+-> Apparel Set : 1.0 3/3
+-> Eyes : 1.0 3/3
+-> Free Gifts : 1.0 3/3
+-> Gloves : 1.0 1/1
+-> Headwear : 1.0 13/13
+-> Loungewear and Nightwear : 1.0 13/13
+-> Mufflers : 1.0 4/4
+-> Nails : 1.0 8/8
+-> Scarves : 1.0 4/4
+-> Skin : 1.0 3/3
+-> Skin Care : 1.0 3/3
+-> Ties : 1.0 6/6
+
+--------------------------------------------------
+
+----------------------------------------------------------------------------------------------------
+
+Computing metrics for top-5 recommendations: 
+
+Computing similarity matrix for all image-text pairs
+Saved similarity matrix at ../metrics/fashion_dataset/finetune/similarity-matrix_5.npy
+
+--------------------------------------------------
+
+Recall@5 for Entire dataset with 5000 examples is:  0.5638
+
+--------------------------------------------------
+
+Recall@5 for train dataset with 3500 examples is:  0.6445714285714286
+
+Recall@5 for train dataset for different sub-categories with 3500 examples: 
+-> Watches : 0.4238095238095238 89/210
+-> Belts : 0.4931506849315068 36/73
+-> Wallets : 0.5256410256410257 41/78
+-> Sandal : 0.5897435897435898 46/78
+-> Jewellery : 0.6 60/100
+-> Shoes : 0.6042345276872965 371/614
+-> Topwear : 0.6304728546409807 720/1142
+-> Eyewear : 0.6428571428571429 45/70
+-> Lips : 0.6727272727272727 37/55
+-> Bags : 0.7248062015503876 187/258
+-> Fragrance : 0.7252747252747253 66/91
+-> Bottomwear : 0.7414634146341463 152/205
+-> Socks : 0.7727272727272727 34/44
+-> Flip Flops : 0.7804878048780488 64/82
+-> Ties : 0.85 17/20
+-> Makeup : 0.8571428571428571 12/14
+-> Dress : 0.8918918918918919 33/37
+-> Innerwear : 0.8933333333333333 134/150
+-> Skin : 0.9090909090909091 10/11
+-> Apparel Set : 0.9285714285714286 13/14
+-> Headwear : 0.9642857142857143 27/28
+-> Accessories : 1.0 12/12
+-> Bath and Body : 1.0 1/1
+-> Beauty Accessories : 1.0 1/1
+-> Free Gifts : 1.0 11/11
+-> Loungewear and Nightwear : 1.0 39/39
+-> Mufflers : 1.0 5/5
+-> Nails : 1.0 14/14
+-> Saree : 1.0 20/20
+-> Scarves : 1.0 9/9
+-> Shoe Accessories : 1.0 5/5
+-> Skin Care : 1.0 7/7
+-> Sports Accessories : 1.0 1/1
+-> Water Bottle : 1.0 1/1
+
+--------------------------------------------------
+
+Recall@5 for val dataset with 1500 examples is:  0.7826666666666666
+
+Recall@5 for val dataset for different sub-categories with 1500 examples: 
+-> Watches : 0.5357142857142857 60/112
+-> Shoes : 0.7531914893617021 177/235
+-> Topwear : 0.7735042735042735 362/468
+-> Bags : 0.7967479674796748 98/123
+-> Bottomwear : 0.801980198019802 81/101
+-> Lips : 0.8214285714285714 23/28
+-> Jewellery : 0.8222222222222222 37/45
+-> Belts : 0.8518518518518519 23/27
+-> Socks : 0.875 21/24
+-> Sandal : 0.8857142857142857 31/35
+-> Fragrance : 0.8918918918918919 33/37
+-> Innerwear : 0.9210526315789473 70/76
+-> Eyewear : 0.9285714285714286 26/28
+-> Wallets : 0.9333333333333333 28/30
+-> Flip Flops : 0.9615384615384616 25/26
+-> Accessories : 1.0 3/3
+-> Apparel Set : 1.0 3/3
+-> Dress : 1.0 15/15
+-> Eyes : 1.0 3/3
+-> Free Gifts : 1.0 3/3
+-> Gloves : 1.0 1/1
+-> Headwear : 1.0 13/13
+-> Loungewear and Nightwear : 1.0 13/13
+-> Makeup : 1.0 9/9
+-> Mufflers : 1.0 4/4
+-> Nails : 1.0 8/8
+-> Saree : 1.0 14/14
+-> Scarves : 1.0 4/4
+-> Skin : 1.0 3/3
+-> Skin Care : 1.0 3/3
+-> Ties : 1.0 6/6
+
+--------------------------------------------------
+
+Recall@5 for test dataset with 1500 examples is:  0.7826666666666666
+
+Recall@5 for test dataset for different sub-categories with 1500 examples: 
+-> Watches : 0.5357142857142857 60/112
+-> Shoes : 0.7531914893617021 177/235
+-> Topwear : 0.7735042735042735 362/468
+-> Bags : 0.7967479674796748 98/123
+-> Bottomwear : 0.801980198019802 81/101
+-> Lips : 0.8214285714285714 23/28
+-> Jewellery : 0.8222222222222222 37/45
+-> Belts : 0.8518518518518519 23/27
+-> Socks : 0.875 21/24
+-> Sandal : 0.8857142857142857 31/35
+-> Fragrance : 0.8918918918918919 33/37
+-> Innerwear : 0.9210526315789473 70/76
+-> Eyewear : 0.9285714285714286 26/28
+-> Wallets : 0.9333333333333333 28/30
+-> Flip Flops : 0.9615384615384616 25/26
+-> Accessories : 1.0 3/3
+-> Apparel Set : 1.0 3/3
+-> Dress : 1.0 15/15
+-> Eyes : 1.0 3/3
+-> Free Gifts : 1.0 3/3
+-> Gloves : 1.0 1/1
+-> Headwear : 1.0 13/13
+-> Loungewear and Nightwear : 1.0 13/13
+-> Makeup : 1.0 9/9
+-> Mufflers : 1.0 4/4
+-> Nails : 1.0 8/8
+-> Saree : 1.0 14/14
+-> Scarves : 1.0 4/4
+-> Skin : 1.0 3/3
+-> Skin Care : 1.0 3/3
+-> Ties : 1.0 6/6
+
+--------------------------------------------------
+
+----------------------------------------------------------------------------------------------------
+
+Computing metrics for top-10 recommendations: 
+
+Computing similarity matrix for all image-text pairs
+Saved similarity matrix at ../metrics/fashion_dataset/finetune/similarity-matrix_10.npy
+
+--------------------------------------------------
+
+Recall@10 for Entire dataset with 5000 examples is:  0.7118
+
+--------------------------------------------------
+
+Recall@10 for train dataset with 3500 examples is:  0.7765714285714286
+
+Recall@10 for train dataset for different sub-categories with 3500 examples: 
+-> Watches : 0.5714285714285714 120/210
+-> Shoes : 0.7296416938110749 448/614
+-> Sandal : 0.7307692307692307 57/78
+-> Wallets : 0.7307692307692307 57/78
+-> Topwear : 0.7626970227670753 871/1142
+-> Belts : 0.7671232876712328 56/73
+-> Jewellery : 0.79 79/100
+-> Fragrance : 0.8131868131868132 74/91
+-> Eyewear : 0.8142857142857143 57/70
+-> Bags : 0.8449612403100775 218/258
+-> Bottomwear : 0.8682926829268293 178/205
+-> Lips : 0.8727272727272727 48/55
+-> Flip Flops : 0.9146341463414634 75/82
+-> Socks : 0.9318181818181818 41/44
+-> Ties : 0.95 19/20
+-> Headwear : 0.9642857142857143 27/28
+-> Innerwear : 0.9666666666666667 145/150
+-> Dress : 0.972972972972973 36/37
+-> Accessories : 1.0 12/12
+-> Apparel Set : 1.0 14/14
+-> Bath and Body : 1.0 1/1
+-> Beauty Accessories : 1.0 1/1
+-> Free Gifts : 1.0 11/11
+-> Loungewear and Nightwear : 1.0 39/39
+-> Makeup : 1.0 14/14
+-> Mufflers : 1.0 5/5
+-> Nails : 1.0 14/14
+-> Saree : 1.0 20/20
+-> Scarves : 1.0 9/9
+-> Shoe Accessories : 1.0 5/5
+-> Skin : 1.0 11/11
+-> Skin Care : 1.0 7/7
+-> Sports Accessories : 1.0 1/1
+-> Water Bottle : 1.0 1/1
+
+--------------------------------------------------
+
+Recall@10 for val dataset with 1500 examples is:  0.9
+
+Recall@10 for val dataset for different sub-categories with 1500 examples: 
+-> Watches : 0.7142857142857143 80/112
+-> Topwear : 0.8846153846153846 414/468
+-> Belts : 0.8888888888888888 24/27
+-> Shoes : 0.9106382978723404 214/235
+-> Socks : 0.9166666666666666 22/24
+-> Bags : 0.926829268292683 114/123
+-> Eyewear : 0.9285714285714286 26/28
+-> Jewellery : 0.9333333333333333 42/45
+-> Sandal : 0.9428571428571428 33/35
+-> Bottomwear : 0.9504950495049505 96/101
+-> Flip Flops : 0.9615384615384616 25/26
+-> Lips : 0.9642857142857143 27/28
+-> Fragrance : 0.972972972972973 36/37
+-> Accessories : 1.0 3/3
+-> Apparel Set : 1.0 3/3
+-> Dress : 1.0 15/15
+-> Eyes : 1.0 3/3
+-> Free Gifts : 1.0 3/3
+-> Gloves : 1.0 1/1
+-> Headwear : 1.0 13/13
+-> Innerwear : 1.0 76/76
+-> Loungewear and Nightwear : 1.0 13/13
+-> Makeup : 1.0 9/9
+-> Mufflers : 1.0 4/4
+-> Nails : 1.0 8/8
+-> Saree : 1.0 14/14
+-> Scarves : 1.0 4/4
+-> Skin : 1.0 3/3
+-> Skin Care : 1.0 3/3
+-> Ties : 1.0 6/6
+-> Wallets : 1.0 30/30
+
+--------------------------------------------------
+
+Recall@10 for test dataset with 1500 examples is:  0.9
+
+Recall@10 for test dataset for different sub-categories with 1500 examples: 
+-> Watches : 0.7142857142857143 80/112
+-> Topwear : 0.8846153846153846 414/468
+-> Belts : 0.8888888888888888 24/27
+-> Shoes : 0.9106382978723404 214/235
+-> Socks : 0.9166666666666666 22/24
+-> Bags : 0.926829268292683 114/123
+-> Eyewear : 0.9285714285714286 26/28
+-> Jewellery : 0.9333333333333333 42/45
+-> Sandal : 0.9428571428571428 33/35
+-> Bottomwear : 0.9504950495049505 96/101
+-> Flip Flops : 0.9615384615384616 25/26
+-> Lips : 0.9642857142857143 27/28
+-> Fragrance : 0.972972972972973 36/37
+-> Accessories : 1.0 3/3
+-> Apparel Set : 1.0 3/3
+-> Dress : 1.0 15/15
+-> Eyes : 1.0 3/3
+-> Free Gifts : 1.0 3/3
+-> Gloves : 1.0 1/1
+-> Headwear : 1.0 13/13
+-> Innerwear : 1.0 76/76
+-> Loungewear and Nightwear : 1.0 13/13
+-> Makeup : 1.0 9/9
+-> Mufflers : 1.0 4/4
+-> Nails : 1.0 8/8
+-> Saree : 1.0 14/14
+-> Scarves : 1.0 4/4
+-> Skin : 1.0 3/3
+-> Skin Care : 1.0 3/3
+-> Ties : 1.0 6/6
+-> Wallets : 1.0 30/30
+
+--------------------------------------------------
+
+----------------------------------------------------------------------------------------------------
+
+Computing metrics for top-20 recommendations: 
+
+Computing similarity matrix for all image-text pairs
+Saved similarity matrix at ../metrics/fashion_dataset/finetune/similarity-matrix_20.npy
+
+--------------------------------------------------
+
+Recall@20 for Entire dataset with 5000 examples is:  0.8356
+
+--------------------------------------------------
+
+Recall@20 for train dataset with 3500 examples is:  0.8882857142857142
+
+Recall@20 for train dataset for different sub-categories with 3500 examples: 
+-> Watches : 0.7428571428571429 156/210
+-> Topwear : 0.8607705779334501 983/1142
+-> Sandal : 0.8846153846153846 69/78
+-> Shoes : 0.8925081433224755 548/614
+-> Belts : 0.9178082191780822 67/73
+-> Jewellery : 0.94 94/100
+-> Eyewear : 0.9428571428571428 66/70
+-> Lips : 0.9454545454545454 52/55
+-> Wallets : 0.9487179487179487 74/78
+-> Bottomwear : 0.9512195121951219 195/205
+-> Bags : 0.9573643410852714 247/258
+-> Fragrance : 0.967032967032967 88/91
+-> Socks : 0.9772727272727273 43/44
+-> Flip Flops : 0.9878048780487805 81/82
+-> Accessories : 1.0 12/12
+-> Apparel Set : 1.0 14/14
+-> Bath and Body : 1.0 1/1
+-> Beauty Accessories : 1.0 1/1
+-> Dress : 1.0 37/37
+-> Free Gifts : 1.0 11/11
+-> Headwear : 1.0 28/28
+-> Innerwear : 1.0 150/150
+-> Loungewear and Nightwear : 1.0 39/39
+-> Makeup : 1.0 14/14
+-> Mufflers : 1.0 5/5
+-> Nails : 1.0 14/14
+-> Saree : 1.0 20/20
+-> Scarves : 1.0 9/9
+-> Shoe Accessories : 1.0 5/5
+-> Skin : 1.0 11/11
+-> Skin Care : 1.0 7/7
+-> Sports Accessories : 1.0 1/1
+-> Ties : 1.0 20/20
+-> Water Bottle : 1.0 1/1
+
+--------------------------------------------------
+
+Recall@20 for val dataset with 1500 examples is:  0.9533333333333334
+
+Recall@20 for val dataset for different sub-categories with 1500 examples: 
+-> Watches : 0.8303571428571429 93/112
+-> Topwear : 0.9551282051282052 447/468
+-> Shoes : 0.9659574468085106 227/235
+-> Bottomwear : 0.9900990099009901 100/101
+-> Accessories : 1.0 3/3
+-> Apparel Set : 1.0 3/3
+-> Bags : 1.0 123/123
+-> Belts : 1.0 27/27
+-> Dress : 1.0 15/15
+-> Eyes : 1.0 3/3
+-> Eyewear : 1.0 28/28
+-> Flip Flops : 1.0 26/26
+-> Fragrance : 1.0 37/37
+-> Free Gifts : 1.0 3/3
+-> Gloves : 1.0 1/1
+-> Headwear : 1.0 13/13
+-> Innerwear : 1.0 76/76
+-> Jewellery : 1.0 45/45
+-> Lips : 1.0 28/28
+-> Loungewear and Nightwear : 1.0 13/13
+-> Makeup : 1.0 9/9
+-> Mufflers : 1.0 4/4
+-> Nails : 1.0 8/8
+-> Sandal : 1.0 35/35
+-> Saree : 1.0 14/14
+-> Scarves : 1.0 4/4
+-> Skin : 1.0 3/3
+-> Skin Care : 1.0 3/3
+-> Socks : 1.0 24/24
+-> Ties : 1.0 6/6
+-> Wallets : 1.0 30/30
+
+--------------------------------------------------
+
+Recall@20 for test dataset with 1500 examples is:  0.9533333333333334
+
+Recall@20 for test dataset for different sub-categories with 1500 examples: 
+-> Watches : 0.8303571428571429 93/112
+-> Topwear : 0.9551282051282052 447/468
+-> Shoes : 0.9659574468085106 227/235
+-> Bottomwear : 0.9900990099009901 100/101
+-> Accessories : 1.0 3/3
+-> Apparel Set : 1.0 3/3
+-> Bags : 1.0 123/123
+-> Belts : 1.0 27/27
+-> Dress : 1.0 15/15
+-> Eyes : 1.0 3/3
+-> Eyewear : 1.0 28/28
+-> Flip Flops : 1.0 26/26
+-> Fragrance : 1.0 37/37
+-> Free Gifts : 1.0 3/3
+-> Gloves : 1.0 1/1
+-> Headwear : 1.0 13/13
+-> Innerwear : 1.0 76/76
+-> Jewellery : 1.0 45/45
+-> Lips : 1.0 28/28
+-> Loungewear and Nightwear : 1.0 13/13
+-> Makeup : 1.0 9/9
+-> Mufflers : 1.0 4/4
+-> Nails : 1.0 8/8
+-> Sandal : 1.0 35/35
+-> Saree : 1.0 14/14
+-> Scarves : 1.0 4/4
+-> Skin : 1.0 3/3
+-> Skin Care : 1.0 3/3
+-> Socks : 1.0 24/24
+-> Ties : 1.0 6/6
+-> Wallets : 1.0 30/30
+
+--------------------------------------------------
+
+----------------------------------------------------------------------------------------------------

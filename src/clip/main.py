@@ -8,7 +8,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description = "Train and Evaluate Your Model")
     parser.add_argument('--dataset_type', type = str, default = 'deep_fashion', help = "Dataset type")
     parser.add_argument('--k', type = int, default = 10, help = "Top k retrieved results to consider")
-    parser.add_argument('--create_dataset', type = bool, default = False, help = "Should create dataset")
+    parser.add_argument('--create_dataset', type = bool, default = True, help = "Should create dataset")
     parser.add_argument('--compute_metrics', type = bool, default = True, help = "Should compute metrics")
     parser.add_argument('--num_examples', type = int, default = 100, help = "Number of examples to be considered in the raw dataset")
     return parser.parse_args()
@@ -23,14 +23,15 @@ def create_dataset(args):
 
 # Gives the first set of retrieved results
 def compute_metrics(args):
-    ks = [10]
+    ks = [int(args.k)]
     metrics = []
     for k in ks:
         print('\nComputing metrics for top-' + str(k) + ' recommendations: ')
         metrics_k = Metrics(args.dataset_type,  num_examples = args.num_examples, top_k = k, compute_sim = True)
         metrics.append(metrics_k.compute_recall())
-        # metrics_k.save_recommendations()
-        # metrics_k.get_recommendations(num_examples = 2)
+        if k == int(args.k):
+            metrics_k.save_recommendations()
+            metrics_k.get_recommendations(num_examples = 2)
         print('\n' + '-' * 100)
     
     plotUtils = PlotUtils()

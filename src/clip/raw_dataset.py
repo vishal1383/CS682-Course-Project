@@ -55,11 +55,23 @@ class RawDataset:
             images_df = pd.read_csv(os.path.join(self.dataset_prefix, 'images.csv'))
             images_df['id'] = images_df['filename'].apply(lambda x: x.replace('.jpg', ' ')).astype(int)
             
+            # text_df = pd.read_csv(os.path.join(self.dataset_prefix, 'styles.csv'), on_bad_lines = 'skip')
+            # cols = ['season', 'usage', 'productDisplayName']
+            # text_df['query'] = text_df.apply(lambda row: ' '.join(row[cols].astype(str)), axis = 1)
             text_df = pd.read_csv(os.path.join(self.dataset_prefix, 'styles.csv'), on_bad_lines = 'skip')
-            text_df['query'] = text_df.apply(lambda row: ' '.join(row[['season', 'usage', 'productDisplayName']].astype(str)), axis = 1)
+            # cols = ['season', 'usage', 'productDisplayName', 'Display', 'Strap Material', 'Occasion', 'Frame Material', 'Pattern', 'Sole Material', 'Material', 'Fabric', 'Wash Care', 'Type']
+            cols = ['productDisplayName', 'Strap Material', 'Frame Material', 'Sole Material', 'baseColour']
+            text_df['query'] = text_df.apply(
+                lambda row: ' '.join(
+                    dict.fromkeys(
+                        filter(None, row[cols].fillna('').astype(str).str.strip())
+                    )
+                ), 
+                axis=1
+            )
 
             data_df = text_df.merge(images_df, on = 'id', how = 'left').reset_index(drop = True)
-            data_df = data_df[:self.n_examples]
+            data_df = data_df[:self.n_examples][['id', 'filename', 'subCategory', 'query']]
             data_df.to_csv(os.path.join(self.dataset_prefix, 'dataset.csv'), index = False)
         else:
             raise ValueError(f"Dataset {self.type} not supported")

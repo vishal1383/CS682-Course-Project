@@ -16,7 +16,7 @@ dataset_paths = {
 
 
 class Trainer:
-    def __init__(self, model, dataset_type, train_dataset, val_dataset, test_dataset, batch_size = 32, lr = 1e-3, device = None):
+    def __init__(self, model, dataset_type, base_model, train_dataset, val_dataset, test_dataset, batch_size = 32, lr = 1e-3, device = None, precision_k = 3):
         '''
             @param model: The model to train
             @param train_dataset: The training dataset
@@ -27,21 +27,30 @@ class Trainer:
             @param device: Device to run the training (e.g., 'cuda' or 'cpu')
         '''
         self.model = model
+        self.base_model = base_model
         self.train_loader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
-        self.val_loader = DataLoader(val_dataset, batch_size = batch_size, shuffle = False)
+        self.val_loader = DataLoader(val_dataset, batch_size = batch_size, shuffle = True)
         self.test_loader = DataLoader(test_dataset, batch_size = batch_size, shuffle = False)
+
+        self.train_len = len(train_dataset)
+        self.val_len = len(val_dataset)
+        self.test_len = len(test_dataset)
         
         self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
         
         self.criterion = nn.CrossEntropyLoss()
+        # self.criterion = nn.MarginRankingLoss(margin = 1.0)
         self.optimizer = optim.Adam(self.model.parameters(), lr = lr)
+        # self.optimizer = optim.SGD(self.model.parameters(), lr = lr, weight_decay = 0.001)
+
+        self.precision_k = precision_k
 
         self.dataset_type = dataset_type
         self.models_path = os.path.join('../models', dataset_paths[self.dataset_type], 'neuralnetwork')
         os.makedirs(self.models_path, exist_ok = True)
 
-        self.predictions_path = os.path.join('../predictions', dataset_paths[self.dataset_type], 'neuralnetwork')
+        self.predictions_path = os.path.join('../predictions', dataset_paths[self.dataset_type], 'neuralnetwork', self.base_model)
         os.makedirs(self.predictions_path, exist_ok = True)
 
         self.pos_predictions_path = os.path.join(self.predictions_path, 'positive')
@@ -67,12 +76,33 @@ class Trainer:
             self.optimizer.zero_grad()
 
             y_pred = self.model(x)
+            
+            # scores = y_pred[:, 1]
+
+            # # Separate positive and negative pairs
+            # pos_scores = scores[y == 1]
+            # neg_scores = scores[y == 0]
+
+            # # Create pairwise combinations
+            # pos_scores = pos_scores.repeat(len(neg_scores))  # Repeat positives
+            # neg_scores = neg_scores.repeat_interleave(len(pos_scores) // len(neg_scores))  # Repeat negatives
+
+            # # Compute pairwise loss
+            # targets = torch.ones(pos_scores.size(0))  # MarginRankingLoss expects 1/-1
+            # loss = self.criterion(pos_scores, neg_scores, targets)
 
             loss = self.criterion(y_pred, y)
 
             acc = self.calculate_accuracy(y_pred, y)
 
             loss.backward()
+
+            # Log gradients
+            # for name, param in self.model.named_parameters():
+            #     if param.grad is not None:
+            #         print(f"Layer: {name}, Gradient Norm: {param.grad.norm()}")
+            #         print(f"Layer: {name}, Param Data: {param.data}")
+            #         print(f"Layer: {name}, Param Shape: {param.shape}")
 
             self.optimizer.step()
 
@@ -81,7 +111,7 @@ class Trainer:
 
         return epoch_loss / len(self.train_loader), epoch_acc / len(self.train_loader)
     
-    def evaluate(self, iterator, precision_k = 3):
+    def evaluate(self, iterator):
         epoch_loss = 0
         epoch_precision = 0
 
@@ -100,12 +130,26 @@ class Trainer:
                 predicted_scores = self.model(query_embeddings.view(-1, query_embeddings.shape[-1]))
                 num_classes = predicted_scores.shape[-1]
                 predicted_scores_per_query = predicted_scores.view(batch_size, num_items, num_classes)
-                epoch_precision += self.calculate_precision_k(predicted_scores_per_query, relevance_scores, precision_k)
+                epoch_precision += self.calculate_precision_k(predicted_scores_per_query, relevance_scores)
+
+                # scores = predicted_scores[:, 1]
+
+                # # Separate positive and negative pairs
+                # pos_scores = scores[relevance_scores.flatten() == 1]
+                # neg_scores = scores[relevance_scores.flatten() == 0]
+
+                # # Create pairwise combinations
+                # pos_scores = pos_scores.repeat(len(neg_scores))  # Repeat positives
+                # neg_scores = neg_scores.repeat_interleave(len(pos_scores) // len(neg_scores))  # Repeat negatives
+
+                # # Compute pairwise loss
+                # targets = torch.ones(pos_scores.size(0))  # MarginRankingLoss expects 1/-1
+                # loss = self.criterion(pos_scores, neg_scores, targets)
       
                 loss = self.criterion(predicted_scores, relevance_scores.view(-1))
                 epoch_loss += loss.item()
-
-        return epoch_loss / len(iterator) , epoch_precision / (len(iterator) * batch_size)
+        
+        return epoch_loss / len(iterator) , epoch_precision / self.val_len
     
     def train(self, num_epochs = 10):
         best_val_loss = float('inf')
@@ -135,12 +179,15 @@ class Trainer:
         return
     
 
-    def predict(self, mode = 'val', precision_k = 3):
+    def predict(self, mode = 'val'):
         iterator = None
+        len_ = None
         if mode == 'val':
-            iterator = self.test_loader
+            iterator = self.val_loader
+            len_ = self.val_len
         elif mode == 'test':    
             iterator = self.test_loader
+            len_ = self.test_len
 
         # Set to eval mode
         self.model.eval()
@@ -159,11 +206,11 @@ class Trainer:
                 predicted_scores = self.model(query_embeddings.view(-1, query_embeddings.shape[-1]))
                 num_classes = predicted_scores.shape[-1]
                 predicted_scores_per_query = predicted_scores.view(batch_size, num_items, num_classes)
-                epoch_precision += self.calculate_precision_k(predicted_scores_per_query, relevance_scores, precision_k)
+                epoch_precision += self.calculate_precision_k(predicted_scores_per_query, relevance_scores)
 
                 self.save_recommendations(queries, item_ids, predicted_scores_per_query, relevance_scores)
 
-        print(f'Preicision@{precision_k} for {mode} data', epoch_precision / (len(iterator) * batch_size))
+        print(f'Preicision@{self.precision_k} for {mode} data', epoch_precision / len_)
         return
 
     # TODO: update this
@@ -182,7 +229,8 @@ class Trainer:
             predicted_scores_query = predicted_scores_per_query[i]
             relevance_score = relevance_scores[i]
 
-            top_k = torch.topk(predicted_scores_query[:, 1], k = 10)
+            # k must be equal the len of retrived list of the base model
+            top_k = torch.topk(predicted_scores_query[:, 1], k = 30)
             top_k_indices = top_k.indices
 
             gt_index = torch.argmax(relevance_score).item()
@@ -201,7 +249,7 @@ class Trainer:
 
         return
 
-    def calculate_precision_k(self, predicted_scores_per_query, relevance_scores, precision_k):
+    def calculate_precision_k(self, predicted_scores_per_query, relevance_scores):
         batch_size, _, _ = predicted_scores_per_query.shape
         
         precision = 0
@@ -211,7 +259,7 @@ class Trainer:
             predicted_scores_query = predicted_scores_per_query[i]
 
             # Sorting by class 1 (but if prob of 1 is less than 0.5?)
-            top_k = torch.topk(predicted_scores_query[:, 1], k = precision_k)
+            top_k = torch.topk(predicted_scores_query[:, 1], k = self.precision_k)
             top_k_indices = top_k.indices
             
             gt_index = torch.argmax(relevance_score).item()

@@ -93,5 +93,5 @@ class TextPreprocessor:
 		text = self.remove_hashtags(text)
 		text = self.remove_punctuation(text)
 		text = self.remove_non_ASCII(text)
-		text = self.remove_stopwords(text)
+		text = self.remove_duplicates(text)
 		return text

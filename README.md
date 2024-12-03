@@ -19,9 +19,38 @@ In our project, we first retrieve images with high recall and use re-ranking wit
 - conda install scikit-learn
 ```
 
-# TODOs
+## Notes (before you run the model):
+ -> Run all the commands from `src` directory
+ -> Make sure you have required files (images.csv, styles.csv) in the `datasets` folder
 
-- Run for the entire dataset
-- Complete Unity setup
-- Add instructions in Readme
-- Normalize the embeddings before use
+
+# Commands to run the models
+
+- Create preprocessed data + generate CLIP (baseline) embeddings + Compute recall metric
+
+```
+    - python3 -m clip.main --num_examples {No of examples to be picked from Fashion30K} --k {No of results to be retrieved for a query}
+```
+
+- Run RCNN & KMeans for custom feature extraction
+
+```
+    - python3 -m clip.rcnn
+    - python3 -m clip.dominant_color
+```
+
+- Run inference for CLIP (finetune) embeddings + Compute recall metric
+
+    -> Make sure you have the checkpoint of the model in `models/` folder accordingly
+
+```
+    - python3 -m finetuning.main --task inference --num_examples {No of examples to be used from Fashion30K} --k {No of results to be retrieved for a query}
+```
+
+
+- Train Neural network with embeddings from above models
+
+```
+    - python3 -m neuralnetwork.main --task train --k {No of results present in the base model retrieved results} --base_model {Base model to use i.e clip or finetune}
+```
+

@@ -2,12 +2,15 @@ import torch
 from torchvision import transforms
 from torch.utils.data import Dataset
 import os
+import torch.nn.functional as F
+import random
+import numpy as np
 
 from src.utils import numpy_utils
 
 
 class RetrievedDataset(Dataset):
-    def __init__(self, files, embeddings_dir_path, mode = 'train', K = 10, precision_k = 3, transform = transforms.Compose([transforms.ToTensor()]) , target_transform = None):
+    def __init__(self, files, embeddings_dir_path, mode = 'train', K = 20, precision_k = 3, transform = transforms.Compose([transforms.ToTensor()]) , target_transform = None):
         self.files = files
         self.embeddings_dir_path = embeddings_dir_path
         self.mode = mode
@@ -42,7 +45,6 @@ class RetrievedDataset(Dataset):
 
             # Implementation details:
             # - Assigning binary scores (could try custom scores) - i.e GT item gets 1 and rest 0
-            # print(os.path.basename(file))
             query_id = os.path.basename(file).split('_')[0]
             query_samples = []
             recommendations = []
@@ -59,8 +61,13 @@ class RetrievedDataset(Dataset):
                 query_samples = sorted(query_samples, key = lambda x : x[2], reverse = True) # Sort based on the relevance score
                 
                 # Consider only K samples for training
-                query_samples = query_samples[:K]
-                self.samples.extend(query_samples)
+                # indices = random.choice(query_samples)
+                num_ = K
+                num_ = random.sample(range(1, K), 1)
+                list_ = [query_samples[0]]
+                # for i in num_:
+                #     list_.append(query_samples[i])
+                self.samples.extend(list_)
                 continue
             
             elif self.mode == 'test' or self.mode == 'val':
@@ -77,6 +84,14 @@ class RetrievedDataset(Dataset):
 
                 continue
         
+        if self.mode == 'train':
+            list_ = []
+            for i, l in enumerate(self.samples):
+                num_ = random.sample(list(range(0, i)) + list(range(i + 1, len(self.samples))), 3)
+                for k in num_:
+                    list_.append([l[0], self.samples[k][1], 0])
+            self.samples.extend(list_)
+
         if self.mode == 'val':
             print('Precision@' + str(self.precision_k) + ' for validation dataset before re-ranking:', self.precision/len(files))
         
@@ -127,6 +142,7 @@ class RetrievedDataset(Dataset):
             query_emb = self.get_query_emb(query_id)
             item_emb = self.get_item_emb(item_id)
             emb = torch.cat((query_emb, item_emb), dim = 0)
+            # emb = F.normalize(emb, p=2, dim=0)
             
             return {
                 'query_ids': query_id,
@@ -149,6 +165,7 @@ class RetrievedDataset(Dataset):
                 
                 # TODO: Check dimensions
                 emb = torch.cat((query_emb, item_emb), dim = 0)
+                # emb = F.normalize(emb, p=2, dim=0)
                 embs.append(emb)
 
             numerical_item_list = [int(item) for item in item_ids]

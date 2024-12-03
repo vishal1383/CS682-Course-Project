@@ -25,8 +25,6 @@ def parse_args():
     parser.add_argument('--raw_data_root_path', type = str, default = '../datasets', help = "Path to raw dataset")
     parser.add_argument('--embeddings_root_path', type = str, default= '../embeddings', help = "Path to embeddings")
     parser.add_argument('--k', type = int, default = 10, help = "Top k retrieved results to consider")
-    parser.add_argument('--create_dataset', type = bool, default = True, help = "Should create dataset")
-    parser.add_argument('--compute_metrics', type = bool, default = True, help = "Should compute metrics")
     parser.add_argument('--num_examples', type = int, default = 100, help = "Number of examples to be considered in the raw dataset")
     parser.add_argument('--predictions_root_path', type = str, default = '../predictions', help = "Path to save the predictions")
     parser.add_argument('--retrieved_data_root_path', type = str, default = '../retrieved_items', help = "Path to retrieved data")
@@ -47,8 +45,12 @@ def load_data(args):
     seed = 42
     random.seed(seed)
     random.shuffle(files)
-    train_files, temp_files = train_test_split(files, train_size = 0.7, random_state = seed)
-    val_files, test_files = train_test_split(temp_files, test_size = 0.15 / (0.15 + 0.15), random_state = seed)
+    # train_files, temp_files = train_test_split(files, train_size = 0.7, random_state = seed)
+    # val_files, test_files = train_test_split(temp_files, test_size = 0.15 / (0.15 + 0.15), random_state = seed)
+
+    train_files = files[:3500]
+    val_files = files[3500:]
+    test_files = files[3500:]
 
     image_paths = []
     texts = []
@@ -97,7 +99,7 @@ def finetune(args):
     
     save_embeddings(args,model, processor)
 
-    metrics = Metrics('deep_fashion',  num_examples = args.num_examples, compute_sim = True)
+    metrics = Metrics('deep_fashion', num_examples = args.num_examples, compute_sim = True)
     metrics.compute_recall()
     return
 
@@ -105,9 +107,16 @@ def run_inference(args):
     model, processor = load_checkpoints(args)
     save_embeddings(args, model, processor)
 
-    metrics = Metrics('deep_fashion',  num_examples = args.num_examples, compute_sim = True)
-    metrics.compute_recall()
-    metrics.save_predictions()
+    ks = [20]
+    for k in ks:
+        print('\nComputing metrics for top-' + str(k) + ' recommendations: ')
+        metrics_k = Metrics('deep_fashion', num_examples = args.num_examples, top_k = k, compute_sim = True)
+        metrics_k.compute_recall()
+        if k in int(args.k):
+            metrics_k.save_recommendations()
+            metrics_k.save_predictions()
+            metrics_k.get_recommendations(num_examples = 2)
+        print('\n' + '-' * 100)
     return
 
 # Show recommendations after re-ranking vs before re-ranking
@@ -150,7 +159,7 @@ def show_recommendations(args, type = 'positive', examples = 10, shuffle = True)
 
         # Plot recommendations before re-ranking
         # TODO: Change '10' here
-        clip_img_path = os.path.join(args.retrieved_data_root_path, dataset_paths[args.dataset_type], '10', query_id + '_c.txt')
+        clip_img_path = os.path.join(args.retrieved_data_root_path, dataset_paths[args.dataset_type], 'finetune', str(args.k), query_id + '_c.txt')
         with open(clip_img_path, 'r') as file:
             clip_recommended_images = {'ids': [], 'imgs': []}
             

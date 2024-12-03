@@ -28,19 +28,24 @@ class Metrics():
         self.data_df = pd.read_csv(os.path.join(self.dataset_prefix, 'dataset.csv'))
         ids = self.data_df['id'].tolist()[:self.num_examples]
 
-        seed = 42
-        random.seed(seed)
-        random.shuffle(ids)
-        self.train_ids, temp_ids = train_test_split(ids, train_size = 0.7, random_state = seed)
-        self.val_ids, self.test_ids = train_test_split(temp_ids, test_size = 0.15 / (0.15 + 0.15), random_state = seed)
-        # print('train val test ids', self.train_ids, self.val_ids, self.test_ids)
-        print('train val test ids', self.val_ids)
-
         # Map indices to actual ids of the samples
         self.indices_to_ids = {index: value for index, value in enumerate(ids)}
         self.ids_to_indices = {value: index for index, value in enumerate(ids)}
 
-        self.retrieved_results_path = os.path.join('../retrieved_items', self.dataset_paths[dataset_type], str(top_k))
+        seed = 42
+        random.seed(seed)
+        random.shuffle(ids)
+        # self.train_ids, temp_ids = train_test_split(ids, train_size = 0.7, random_state = seed)
+        # self.val_ids, self.test_ids = train_test_split(temp_ids, test_size = 0.15 / (0.15 + 0.15), random_state = seed)
+        
+        self.train_ids = ids[:3500]
+        self.val_ids = ids[3500:]
+        self.test_ids = ids[3500:]
+        
+        # print('train val test ids', self.train_indices, self.val_indices, self.test_indices)
+        # print('train val test ids', self.val_ids)
+
+        self.retrieved_results_path = os.path.join('../retrieved_items', self.dataset_paths[dataset_type], self.model_type, str(top_k))
         os.makedirs(self.retrieved_results_path, exist_ok = True)
         
         self.embeddings_path = os.path.join(ROOT_EMBEDDINGS_FOLDER, self.dataset_paths[dataset_type], self.model_type)
@@ -50,6 +55,7 @@ class Metrics():
         self.metrics_path = os.path.join(ROOT_METRICS_FOLDER, self.dataset_paths[dataset_type], self.model_type)
         os.makedirs(self.metrics_path, exist_ok = True)
         
+        self.similarity_matrix_orig = np.zeros((num_examples, num_examples))
         self.similarity_matrix = np.zeros((num_examples, top_k))
         self.similarity_matrix_path = os.path.join(self.metrics_path, 'similarity-matrix_' + str(self.top_k) + '.npy')
         if compute_sim:
@@ -88,30 +94,50 @@ class Metrics():
         # TODO: Might have to write to a file
         # for every text query - Entire dataset
         sim = np.load(self.similarity_matrix_path).astype(int)
-        recall = sum([(i in sim[i]) for i in range(sim.shape[0])])/sim.shape[0]
-        print(f'\nRecall@{self.top_k} for Entire dataset with {self.num_examples} examples is: ', recall)
+        total_samples = sim.shape[0]
+        positive_samples = sum([(i in sim[i]) for i in range(total_samples)])
+        recall = positive_samples/total_samples
+        print(f'\nRecall@{self.top_k} for Entire dataset with {self.num_examples} examples is: ', recall, f'({positive_samples}/{total_samples})')
         print('\n' + '-' * 50)
 
-        # Train data
-        train_indices = [self.ids_to_indices[id] for id in self.train_ids]
-        similarity_matrix_train = np.argsort(-self.similarity_matrix_orig[train_indices, :][:, train_indices], axis = 1)[:, :self.top_k]
-        recall_train = sum([(i in similarity_matrix_train[i]) for i in range(similarity_matrix_train.shape[0])])/similarity_matrix_train.shape[0]
-        print(f'\nRecall@{self.top_k} for Train dataset with {len(train_indices)} examples is: ', recall_train)
-        print('\n' + '-' * 50)
+        subcategories = np.unique(self.data_df['subCategory'].tolist())
+        for data_type in ['train', 'val', 'test']:
+            data_ids = None
+            if data_type == 'train':
+                data_ids = self.train_ids
+            elif data_type == 'val':
+                data_ids = self.val_ids
+            elif data_type == 'test':
+                data_ids = self.test_ids
+            
+            data_indices = [self.ids_to_indices[id] for id in data_ids]
+            similarity_matrix_filtered = np.argsort(-self.similarity_matrix_orig[data_indices, :][:, data_indices], axis = 1)[:, :self.top_k]
+            total_samples = similarity_matrix_filtered.shape[0]
+            positive_samples = sum([(i in similarity_matrix_filtered[i]) for i in range(total_samples)])
+            recall_filtered = positive_samples/total_samples
+            print(f'\nRecall@{self.top_k} for {data_type} dataset with {len(data_indices)} examples is: ', recall_filtered, f'({positive_samples}/{total_samples})')
 
-        # Val data
-        val_indices = [self.ids_to_indices[id] for id in self.val_ids]
-        similarity_matrix_val = np.argsort(-self.similarity_matrix_orig[val_indices, :][:, val_indices], axis = 1)[:, :self.top_k]
-        recall_val = sum([(i in similarity_matrix_val[i]) for i in range(similarity_matrix_val.shape[0])])/similarity_matrix_val.shape[0]
-        print(f'\nRecall@{self.top_k} for Val dataset with {len(val_indices)} examples is: ', recall_val)
-        print('\n' + '-' * 50)
+            total = 0
+            subcategory_to_recall = {}
+            for subcategory in subcategories:
+                df = self.data_df[(self.data_df['id'].isin(data_ids)) & (self.data_df['subCategory'] == subcategory)]
+                indices = df.index.tolist()
+                total += len(indices)
 
-        # Test data
-        test_indices = [self.ids_to_indices[id] for id in self.test_ids]
-        similarity_matrix_test = np.argsort(-self.similarity_matrix_orig[test_indices, :][:, test_indices], axis = 1)[:, :self.top_k]
-        recall_test = sum([(i in similarity_matrix_test[i]) for i in range(similarity_matrix_test.shape[0])])/similarity_matrix_test.shape[0]
-        print(f'\nRecall@{self.top_k} for Test dataset with {len(test_indices)} examples is: ', recall_test)
-        print('\n' + '-' * 50)
+                if len(indices) == 0:
+                    # Subcategory not found in the data
+                    continue
+
+                similarity_matrix_filtered = np.argsort(-self.similarity_matrix_orig[indices, :][:, indices], axis = 1)[:, :self.top_k]
+                recall_filtered = sum([(i in similarity_matrix_filtered[i]) for i in range(similarity_matrix_filtered.shape[0])])/similarity_matrix_filtered.shape[0]
+                subcategory_to_recall[subcategory] = [recall_filtered, sum([(i in similarity_matrix_filtered[i]) for i in range(similarity_matrix_filtered.shape[0])]), similarity_matrix_filtered.shape[0]]
+
+            subcategory_to_recall = dict(sorted(subcategory_to_recall.items(), key = lambda item: item[1][0]))
+            print(f'\nRecall@{self.top_k} for {data_type} dataset for different sub-categories with {len(data_indices)} examples: ')
+
+            for keys, values in subcategory_to_recall.items():
+                print('-> ' + keys + ' : ' + str(values[0]) + ' ' + str(values[1]) + '/' + str(values[2]))
+            print('\n' + '-' * 50)
 
         return recall
     

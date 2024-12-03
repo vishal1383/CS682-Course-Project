@@ -14,9 +14,16 @@ __pycache__/
 # Datasets
 /datasets/fashion_dataset/images/*
 /datasets/fashion_dataset/rcnn_cropped_images/*
+/datasets/fashion_dataset/dominant_colours/*
 
 # Embeddings
 /embeddings/fashion_dataset/*
 
 # Models
 /models/fashion_dataset/finetune/*
+
+# Retrived items
+/retrieved_items/*
+
+# Predictions
+/predictions/*
